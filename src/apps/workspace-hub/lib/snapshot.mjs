@@ -7,7 +7,7 @@ const select=(rows,ids)=>array(rows).filter(r=>ids.includes(r.id));
 const safeString=s=>typeof s==='string'&&s.length<=16000;
 function scan(value,depth=0){
  if(depth>14)throw Error('SNAPSHOT_TOO_DEEP');
- if(typeof value==='string'){if(value.length>16000||/rctx_[A-Za-z0-9_-]{12,}/.test(value))throw Error('UNSAFE_SNAPSHOT_CONTENT');return;}
+ if(typeof value==='string'){if(value.length>16000||/(?:rctx_|gh[pousr]_|github_pat_|sk-)[A-Za-z0-9_-]{16,}|-----BEGIN [A-Z ]*PRIVATE KEY-----/.test(value))throw Error('UNSAFE_SNAPSHOT_CONTENT');return;}
  if(Array.isArray(value)){if(value.length>5000)throw Error('SNAPSHOT_TOO_LARGE');value.forEach(v=>scan(v,depth+1));return;}
  if(value&&typeof value==='object')for(const [k,v]of Object.entries(value)){if(/^(apiKey|clientSecret|refreshToken|accessToken|credentials?|password|secret|contextKey|transcript|rawTranscript|rawMessages|prompt|command|shell|exec|routing|destination|contact|provenance|__proto__|constructor|prototype)$/i.test(k))throw Error('PRIVATE_FIELD_NOT_ALLOWED');scan(v,depth+1);}
 }

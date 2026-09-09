@@ -55,3 +55,12 @@ O coelho oficial e as fontes de identidade da instalação original não são di
 ## Limites desta versão
 
 Esta fase separa o produto da configuração existente. Não instala um App no Ravi vivo, não migra a instalação anterior, não cria cron, não conecta contas e não publica no Console. Connectors preserva contexto e revisão de impacto; ações de gerenciamento continuam dependendo dos contratos locais da instalação. Onboarding é fase 4, operação independente é fase 5 e atualização/migração/recuperação completa é fase 6. Os testes com duas configurações ocorreram na mesma máquina; não são um piloto com duas pessoas.
+
+## Integrações existentes e setup
+
+A configuração v1 aceita o campo opcional `integrations`, com defaults desligados:
+`agenda: {mode: "off", account: ""}` e `meetings: {mode: "off"}`.
+Modes ativos: `google-workspace` para agenda e `tldv` para reuniões.
+Credenciais nunca integram a configuração. O campo é backend e não entra no
+config da Home; o setup local exibe apenas seleção e conta esperada.
+Veja [ONBOARDING.md](ONBOARDING.md).

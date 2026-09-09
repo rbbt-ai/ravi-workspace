@@ -3,7 +3,7 @@ import {dirname,resolve} from 'node:path';
 import {randomUUID} from 'node:crypto';
 export const SOURCES=['agenda','meetings','pipeline','projects','tasks','agents','alerts','activity','connections','projectAnalysis'];
 export const WIDGETS=['agenda','urgent','agents','activity','projects','pipeline','meetings','decisions','changes'];
-export const DEFAULT_CONFIG={schema:'workspace.config/v1',installationId:null,workspaceName:'Meu Workspace',brand:{wordmark:'Ravi',logoFile:null,displayFontRegular:null,displayFontBold:null},owner:{name:'',context:''},locale:'pt-BR',timezone:'UTC',historyDays:15,defaultTheme:'system',theme:{day:{},dark:{}},widgets:null,sources:[],selection:{agents:[],alertAgents:[],sessions:[],projects:[],tasks:[],work:[],sources:[]},allowedOrigins:['https://calendar.google.com','https://www.google.com','https://tldv.io','https://app.tldv.io'],projectName:''};
+export const DEFAULT_CONFIG={schema:'workspace.config/v1',installationId:null,workspaceName:'Meu Workspace',brand:{wordmark:'Ravi',logoFile:null,displayFontRegular:null,displayFontBold:null},owner:{name:'',context:''},locale:'pt-BR',timezone:'UTC',historyDays:15,defaultTheme:'system',theme:{day:{},dark:{}},widgets:null,sources:[],selection:{agents:[],alertAgents:[],sessions:[],projects:[],tasks:[],work:[],sources:[]},allowedOrigins:['https://calendar.google.com','https://www.google.com','https://tldv.io','https://app.tldv.io'],projectName:'',integrations:{agenda:{mode:'off',account:''},meetings:{mode:'off'}}};
 const object=v=>v&&typeof v==='object'&&!Array.isArray(v);
 export function exact(v,keys,label){if(!object(v)||Object.keys(v).some(k=>!keys.includes(k)))throw Error('INVALID_'+label);}
 const text=(s,n=200)=>typeof s==='string'&&s.length<=n&&!/[\u0000-\u001f]/.test(s);
@@ -14,6 +14,9 @@ export function validateConfig(raw){
  const c={...structuredClone(DEFAULT_CONFIG),...raw,brand:{...DEFAULT_CONFIG.brand,...raw.brand},owner:{...DEFAULT_CONFIG.owner,...raw.owner},selection:{...structuredClone(DEFAULT_CONFIG.selection),...raw.selection},theme:{day:{},dark:{},...raw.theme}};
  if(c.schema!=='workspace.config/v1'||!text(c.installationId,80)||!c.installationId||!/^[a-z0-9][a-z0-9-]{2,79}$/.test(c.installationId))throw Error('INVALID_INSTALLATION_ID');
  exact(c.brand,Object.keys(DEFAULT_CONFIG.brand),'BRAND');exact(c.owner,['name','context'],'OWNER');exact(c.selection,Object.keys(DEFAULT_CONFIG.selection),'SELECTION');exact(c.theme,['day','dark'],'THEME');
+ exact(c.integrations,['agenda','meetings'],'INTEGRATIONS');exact(c.integrations.agenda,['mode','account'],'AGENDA_BINDING');exact(c.integrations.meetings,['mode'],'MEETINGS_BINDING');
+ if(!['off','google-workspace'].includes(c.integrations.agenda.mode)||!text(c.integrations.agenda.account,200)||!['off','tldv'].includes(c.integrations.meetings.mode))throw Error('INVALID_INTEGRATIONS');
+ if(c.integrations.agenda.mode==='google-workspace'&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.integrations.agenda.account))throw Error('EXPECTED_ACCOUNT_REQUIRED');
  if(!text(c.workspaceName,100)||!c.workspaceName||!text(c.brand.wordmark,16)||!c.brand.wordmark||!text(c.owner.name,80)||!text(c.owner.context,100)||!text(c.projectName,100))throw Error('INVALID_IDENTITY');
  for(const field of ['logoFile','displayFontRegular','displayFontBold'])if(c.brand[field]!==null&&(!text(c.brand[field],1000)||!c.brand[field]))throw Error('INVALID_ASSET_PATH');
  try{new Intl.DateTimeFormat(c.locale,{timeZone:c.timezone}).format(new Date());}catch{throw Error('INVALID_LOCALE_TIMEZONE');}

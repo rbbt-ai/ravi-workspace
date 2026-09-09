@@ -197,6 +197,7 @@
   function action(name) {
     if(feedLiveAction(name)||connectorsAction(name)||alertsAction(name)||homeAction(name))return;
     if(name==='theme-day'||name==='theme-dark')window.workspaceTheme.set(name==='theme-day'?'day':'dark');
+    if(name==='setup')showDialog('Configurar fontes','Configuração local',`<p>Abra a configuração local do Workspace no seu Ravi para escolher agentes, conversas e integrações. Este snapshot não altera a instalação.</p>`);
     if(name==='appearance'){
       showDialog('Aparência do workspace','Identidade e cores',`<p>${e(config.title)}. A marca e a paleta são definidas pela configuração desta instalação.</p><div class="appearance-themes" role="group" aria-label="Escolher aparência"><button class="theme-option" data-action="theme-day" data-theme-choice="day">${icon('sun')}<span><strong>Day</strong><small>Claro, com fundos suaves.</small></span></button><button class="theme-option" data-action="theme-dark" data-theme-choice="dark">${icon('moon')}<span><strong>Dark</strong><small>Escuro, com contraste.</small></span></button></div><div class="dialog-note">A preferência fica neste navegador, separada das outras instalações. O padrão pode acompanhar o sistema.</div>`);syncThemeControls();
     }

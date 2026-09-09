@@ -58,3 +58,11 @@ Sem flags, esta interface é o diagnóstico de instalação. A Home completa usa
 - Teste de viewport móvel não é teste físico de iPhone.
 - Ainda não há publicação, atualização automática ou instalação no Marketplace.
 - Nenhum dado operacional acompanha este pacote.
+
+## Operações da configuração inicial
+
+`discover --config` é somente leitura do inventário visível. `collect --config`
+gera o snapshot externo; `setup --config [--port]` abre o serviço loopback com
+revisão, salvar, coleta e importação. Ambos são mutating no manifesto.
+Nenhuma dessas declarações concede acesso nativo, hospeda UI ou instala o App.
+Arquivos de configuração e snapshot são externos, conforme ONBOARDING.md.

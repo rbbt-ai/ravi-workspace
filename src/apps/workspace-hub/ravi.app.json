@@ -2,8 +2,8 @@
   "schema": "ravi.app/v1",
   "id": "workspace-hub",
   "name": "Ravi Workspace",
-  "version": "0.1.0-alpha.3",
-  "description": "Workspace pessoal instalado no Ravi do usu\u00e1rio.",
+  "version": "0.1.0-alpha.4",
+  "description": "Workspace pessoal instalado no Ravi do usuário.",
   "interfaces": {
     "cli": {
       "command": "ravi workspace-hub",
@@ -75,6 +75,24 @@
       "command": "bun ./cli.mjs build --json {args}",
       "mutating": true,
       "permission": "workspace-hub:write"
+    },
+    "workspace-hub.discover": {
+      "interface": "cli",
+      "command": "bun ./cli.mjs discover --json {args}",
+      "mutating": false,
+      "permission": "workspace-hub:read"
+    },
+    "workspace-hub.collect": {
+      "interface": "cli",
+      "command": "bun ./cli.mjs collect --json {args}",
+      "mutating": true,
+      "permission": "workspace-hub:write"
+    },
+    "workspace-hub.setup": {
+      "interface": "cli",
+      "command": "bun ./cli.mjs setup --json {args}",
+      "mutating": true,
+      "permission": "workspace-hub:write"
     }
   },
   "permissions": {
@@ -88,7 +106,18 @@
   },
   "storage": {
     "sqlite": [],
-    "files": []
+    "files": [
+      {
+        "path": "<config-file>",
+        "kind": "state",
+        "retention": "durable"
+      },
+      {
+        "path": "<config-file>.snapshot.json",
+        "kind": "cache",
+        "retention": "cache"
+      }
+    ]
   },
   "artifacts": [],
   "events": {

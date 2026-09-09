@@ -2,6 +2,10 @@ import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {initializeConfig} from './lib/config.mjs';
 import {buildWorkspace,loadWorkspace} from './lib/build.mjs';
+import {readConfig} from './lib/config.mjs';
+import {discover} from './lib/native.mjs';
+import {collect,readSnapshot,setupView} from './lib/setup.mjs';
+import {startSetup} from './lib/setup-server.mjs';
 
 const root=new URL('./',import.meta.url);
 export async function packageStatus(){
@@ -23,6 +27,13 @@ if(import.meta.main){
   const args=process.argv.slice(2),op=args.shift();
   try{
     if(op==='status'&&args.every(a=>a==='--json'))console.log(JSON.stringify(await packageStatus()));
+    else if(['discover','collect','setup'].includes(op)){
+      const options={};for(let i=0;i<args.length;i++){if(args[i]==='--json')continue;if(!['--config','--port'].includes(args[i])||!args[i+1]||options[args[i]])throw Error('INVALID_ARGUMENT');options[args[i]]=args[++i];}
+      if(!options['--config'])throw Error('CONFIG_REQUIRED');if(options['--port']&&op!=='setup')throw Error('INVALID_ARGUMENT');
+      if(op==='setup'){const port=Number(options['--port']||0);if(!Number.isInteger(port)||port<0||port>65535)throw Error('INVALID_PORT');const server=await startSetup(options['--config'],{port});console.log(JSON.stringify({status:'listening',url:`http://127.0.0.1:${server.port}/#/setup`,scope:'local-installation-setup'}));const close=()=>{server.stop(true);process.exit(0)};process.on('SIGINT',close);process.on('SIGTERM',close);}
+      else if(op==='discover'){const c=await readConfig(options['--config']);console.log(JSON.stringify(setupView(c,await discover(c.historyDays),await readSnapshot(options['--config']))));}
+      else{const {inventory,...result}=await collect(options['--config']);console.log(JSON.stringify(result));}
+    }
     else if(['init','build'].includes(op)){
       const options={};for(let i=0;i<args.length;i++){if(args[i]==='--json')continue;if(!['--config','--snapshot','--out'].includes(args[i])||!args[i+1]||args[i+1].startsWith('--')||options[args[i]])throw Error('INVALID_ARGUMENT');options[args[i]]=args[++i];}
       if(!options['--config'])throw Error('CONFIG_REQUIRED');
