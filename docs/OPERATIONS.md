@@ -1,9 +1,6 @@
 # Operação privada por instalação
 
-Prévia 0.1.0-alpha.5. O código de operação e os testes locais estão disponíveis.
-O aceite da fase 5 ainda exige dois usuários reais, cada um com seu Ravi, fontes,
-conta Console e projeto privado próprios. Testes com funções injetadas não provam
-isolamento no provedor. Não ative um piloto ou contas de terceiros sem autorização.
+Prévia interna individual. Use primeiro o fluxo simples em INSTALLATION.md. Publicação e cron são opcionais; cada proprietário os configura no seu Ravi. Testes locais estão disponíveis, sem certificação de duas pessoas ou novos grants.
 
 ## Topologia suportada
 
@@ -127,5 +124,4 @@ cruzados. Não usar a chave ou fontes de um participante no ambiente do outro.
 Os testes isolados cobrem expiração/recusa, troca de principal/conta, membership,
 cache, arquivos privados, symlinks, concorrência, publicação ambígua e cron
 idempotente. Não executam grants, contas, cron ou publicação reais de terceiros.
-Instalador, migrações, retenção de gerações, backup, recuperação de preparação/lock
-interrompidos e desinstalação completa pertencem à fase 6.
+O lifecycle local está em INSTALLATION.md. Recuperação de estado externo, troca de bindings e retenção automática de gerações não são feitas pelo instalador.

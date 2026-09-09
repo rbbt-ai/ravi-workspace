@@ -9,8 +9,7 @@ Ravi instalada 3.260715.3 e Bun 1.3.14; outras versões ainda não foram certifi
 O diretório completo `src/apps/workspace-hub` é a unidade de instalação. O
 registry nativo descobre Apps em `apps/<app-id>` dentro do diretório de estado
 Ravi da instalação. Não substitua um App existente sem verificar sua procedência.
-A instalação manual desse diretório em estado vazio foi validada; um instalador
-versionado com migração e rollback faz parte das fases seguintes.
+A instalação manual desse diretório em estado vazio foi validada; o instalador do pacote oferece backup, atualização e rollback (INSTALLATION.md).
 
 Após instalar no próprio Ravi:
 
@@ -73,3 +72,7 @@ Arquivos de configuração e snapshot são externos, conforme ONBOARDING.md.
 de cron exigem, respectivamente, `--publish` e `--apply`, além da autoridade
 nativa. `operation-status` é leitura. Sem flags de aplicação não há publicação
 ou criação de cron. Leia OPERATIONS.md; nenhum manifesto concede grants.
+
+## Abertura da instalação
+
+`ravi workspace-hub open [--port 4318]` abre a Home/configuração locais usando o arquivo criado pelo instalador. É mutating por permitir salvar configuração e coletar arquivos. O manifesto não concede permissões. O acesso remoto opcional é separado.
