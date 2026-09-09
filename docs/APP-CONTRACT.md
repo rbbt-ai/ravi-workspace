@@ -50,13 +50,13 @@ bun src/apps/workspace-hub/cli.mjs preview
 ```
 
 A saída informa a porta escolhida em `127.0.0.1`; Ctrl+C encerra o processo.
-Sem flags, esta interface é o diagnóstico de instalação. A Home completa usa `preview --workspace --config <arquivo> [--snapshot <arquivo>]`. Veja CONFIGURATION.md. A gestão e coleta das fontes serão integradas nas fases seguintes. Acesso remoto autenticado não é fornecido por esse servidor de prévia.
+Sem flags, esta interface é o diagnóstico de instalação. A Home completa usa `preview --workspace --config <arquivo> [--snapshot <arquivo>]`. Veja CONFIGURATION.md. A configuração e consulta de fontes estão descritas em ONBOARDING.md. Acesso remoto autenticado não é fornecido por esse servidor de prévia.
 
 ## Limites da prova
 
 - Estados e diretórios temporários na mesma máquina não são dois usuários reais.
 - Teste de viewport móvel não é teste físico de iPhone.
-- Ainda não há publicação, atualização automática ou instalação no Marketplace.
+- Publicação privada e agendamento estão implementados em OPERATIONS.md; o aceite operacional entre pessoas está pendente. Não há instalação no Marketplace.
 - Nenhum dado operacional acompanha este pacote.
 
 ## Operações da configuração inicial
@@ -66,3 +66,10 @@ gera o snapshot externo; `setup --config [--port]` abre o serviço loopback com
 revisão, salvar, coleta e importação. Ambos são mutating no manifesto.
 Nenhuma dessas declarações concede acesso nativo, hospeda UI ou instala o App.
 Arquivos de configuração e snapshot são externos, conforme ONBOARDING.md.
+
+## Operações por instalação
+
+`prepare-operation`, `refresh` e `schedule` são mutating. Publicação e criação
+de cron exigem, respectivamente, `--publish` e `--apply`, além da autoridade
+nativa. `operation-status` é leitura. Sem flags de aplicação não há publicação
+ou criação de cron. Leia OPERATIONS.md; nenhum manifesto concede grants.

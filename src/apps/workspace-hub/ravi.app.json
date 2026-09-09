@@ -2,8 +2,8 @@
   "schema": "ravi.app/v1",
   "id": "workspace-hub",
   "name": "Ravi Workspace",
-  "version": "0.1.0-alpha.4",
-  "description": "Workspace pessoal instalado no Ravi do usuário.",
+  "version": "0.1.0-alpha.5",
+  "description": "Workspace pessoal instalado no Ravi do usu\u00e1rio.",
   "interfaces": {
     "cli": {
       "command": "ravi workspace-hub",
@@ -93,6 +93,30 @@
       "command": "bun ./cli.mjs setup --json {args}",
       "mutating": true,
       "permission": "workspace-hub:write"
+    },
+    "workspace-hub.prepare-operation": {
+      "interface": "cli",
+      "command": "bun ./cli.mjs prepare-operation --json {args}",
+      "mutating": true,
+      "permission": "workspace-hub:write"
+    },
+    "workspace-hub.operation-status": {
+      "interface": "cli",
+      "command": "bun ./cli.mjs operation-status --json {args}",
+      "mutating": false,
+      "permission": "workspace-hub:read"
+    },
+    "workspace-hub.refresh": {
+      "interface": "cli",
+      "command": "bun ./cli.mjs refresh --json {args}",
+      "mutating": true,
+      "permission": "workspace-hub:write"
+    },
+    "workspace-hub.schedule": {
+      "interface": "cli",
+      "command": "bun ./cli.mjs schedule --json {args}",
+      "mutating": true,
+      "permission": "workspace-hub:write"
     }
   },
   "permissions": {
@@ -116,6 +140,11 @@
         "path": "<config-file>.snapshot.json",
         "kind": "cache",
         "retention": "cache"
+      },
+      {
+        "path": "<operation-root>/<installation-id>",
+        "kind": "state",
+        "retention": "durable"
       }
     ]
   },

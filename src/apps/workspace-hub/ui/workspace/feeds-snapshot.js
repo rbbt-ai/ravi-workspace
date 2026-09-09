@@ -7,7 +7,7 @@
   function nativeLiveStamp(n,text,action='home-sources'){return widgetStamp(text+(feedLiveStates[n]?.error?' · Atualização indisponível':''),action);}
   function nativeLiveNotice(n){const s=data.sourceStates[n];return !s||s.status==='not_configured'?notice('Fonte não configurada nesta instalação.'):s.status==='unavailable'||s.status==='stale'?notice('Atualização indisponível ou atrasada. Os registros disponíveis mantêm a data da última consulta.'):'';}
   function feedLiveStamp(n,text){return widgetStamp(text+(feedLiveStates[n]?.error?' · Atualização indisponível':''),'feed-'+n);}
-  function feedLiveControls(){return `<section class="feed-live-controls" aria-label="Atualização dos dados"><span class="feed-live-symbol">${icon('info')}</span><div><strong>Dados desta instalação</strong><p>Consulte as datas e o alcance de cada fonte. A atualização automática ainda não foi configurada para esta instalação.</p></div>${homeButton('home-sources','Ver fontes','secondary')}</section>`;}
+  function feedLiveControls(){return `<section class="feed-live-controls" aria-label="Atualização dos dados"><span class="feed-live-symbol">${icon('info')}</span><div><strong>Dados desta instalação</strong><p>Esta página mostra os dados recebidos. Consulte as datas e o alcance de cada fonte.</p></div>${homeButton('home-sources','Ver fontes','secondary')}</section>`;}
   function feedLiveAction(){return false;}
   function feedLivePatch(node,html){
     if(!node||node.innerHTML===html)return;

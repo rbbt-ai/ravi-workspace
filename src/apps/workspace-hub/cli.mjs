@@ -6,6 +6,7 @@ import {readConfig} from './lib/config.mjs';
 import {discover} from './lib/native.mjs';
 import {collect,readSnapshot,setupView} from './lib/setup.mjs';
 import {startSetup} from './lib/setup-server.mjs';
+import {prepareOperation,operationStatus,refreshOperation,scheduleOperation} from './lib/operations.mjs';
 
 const root=new URL('./',import.meta.url);
 export async function packageStatus(){
@@ -27,6 +28,14 @@ if(import.meta.main){
   const args=process.argv.slice(2),op=args.shift();
   try{
     if(op==='status'&&args.every(a=>a==='--json'))console.log(JSON.stringify(await packageStatus()));
+    else if(['prepare-operation','operation-status','refresh','schedule'].includes(op)){
+      const allowed=op==='prepare-operation'?['--config','--root','--project','--interval']:['--operation',...(op==='refresh'?['--publish']:op==='schedule'?['--apply']:[])];
+      const options={};for(let i=0;i<args.length;i++){const flag=args[i];if(flag==='--json')continue;if(!allowed.includes(flag)||options[flag]!==undefined)throw Error('INVALID_ARGUMENT');if(['--publish','--apply'].includes(flag))options[flag]=true;else{if(!args[i+1]||args[i+1].startsWith('--'))throw Error('INVALID_ARGUMENT');options[flag]=args[++i];}}
+      let result;
+      if(op==='prepare-operation'){if(!options['--config']||!options['--root']||!options['--project'])throw Error('OPERATION_ARGUMENTS_REQUIRED');result=await prepareOperation(options['--config'],options['--root'],options['--project'],{intervalMinutes:Number(options['--interval']||15)});}
+      else{if(!options['--operation'])throw Error('OPERATION_REQUIRED');result=op==='operation-status'?await operationStatus(options['--operation']):op==='refresh'?await refreshOperation(options['--operation'],{publish:Boolean(options['--publish'])}):await scheduleOperation(options['--operation'],{apply:Boolean(options['--apply'])});}
+      console.log(JSON.stringify(result));
+    }
     else if(['discover','collect','setup'].includes(op)){
       const options={};for(let i=0;i<args.length;i++){if(args[i]==='--json')continue;if(!['--config','--port'].includes(args[i])||!args[i+1]||options[args[i]])throw Error('INVALID_ARGUMENT');options[args[i]]=args[++i];}
       if(!options['--config'])throw Error('CONFIG_REQUIRED');if(options['--port']&&op!=='setup')throw Error('INVALID_ARGUMENT');

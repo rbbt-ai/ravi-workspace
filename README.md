@@ -18,3 +18,9 @@ A configuração inicial completa de fontes, operação independente, atualizaç
 
 O setup local agora oferece seleção, revisão e consulta real de fontes.
 Veja [ONBOARDING.md](docs/ONBOARDING.md) para uso, alcance e limites.
+
+## Operação por instalação
+
+Consulte [OPERATIONS.md](docs/OPERATIONS.md) para preparação de estado privado,
+coleta, publicação e cron idempotente. Alpha.5 tem implementação e testes locais;
+o aceite entre duas pessoas e a execução independente em seus Ravis estão pendentes.

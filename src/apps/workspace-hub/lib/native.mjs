@@ -5,8 +5,8 @@ const text=(v,n=1600)=>{
  if(/(?:rctx_|gh[pousr]_|github_pat_|sk-)[A-Za-z0-9_-]{16,}|-----BEGIN [A-Z ]*PRIVATE KEY-----/.test(v))throw Error('SENSITIVE_SOURCE_CONTENT');
  return v.slice(0,n);
 };
-export function command(args,{json=true}={}){
- return new Promise((resolve,reject)=>execFile('ravi',args,{timeout:25000,maxBuffer:2500000},(error,stdout)=>{
+export function command(args,{json=true,timeout=25000}={}){
+ return new Promise((resolve,reject)=>execFile('ravi',args,{timeout,maxBuffer:2500000},(error,stdout)=>{
   if(error)return reject(Error('SOURCE_UNAVAILABLE'));
   try{resolve(json?JSON.parse(stdout):stdout);}catch{reject(Error('SOURCE_CONTRACT_CHANGED'));}
  }));

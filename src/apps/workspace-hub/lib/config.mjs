@@ -1,6 +1,7 @@
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {dirname,resolve} from 'node:path';
 import {randomUUID} from 'node:crypto';
+import {assertBoundConfig} from './operation-storage.mjs';
 export const SOURCES=['agenda','meetings','pipeline','projects','tasks','agents','alerts','activity','connections','projectAnalysis'];
 export const WIDGETS=['agenda','urgent','agents','activity','projects','pipeline','meetings','decisions','changes'];
 export const DEFAULT_CONFIG={schema:'workspace.config/v1',installationId:null,workspaceName:'Meu Workspace',brand:{wordmark:'Ravi',logoFile:null,displayFontRegular:null,displayFontBold:null},owner:{name:'',context:''},locale:'pt-BR',timezone:'UTC',historyDays:15,defaultTheme:'system',theme:{day:{},dark:{}},widgets:null,sources:[],selection:{agents:[],alertAgents:[],sessions:[],projects:[],tasks:[],work:[],sources:[]},allowedOrigins:['https://calendar.google.com','https://www.google.com','https://tldv.io','https://app.tldv.io'],projectName:'',integrations:{agenda:{mode:'off',account:''},meetings:{mode:'off'}}};
@@ -29,6 +30,6 @@ export function validateConfig(raw){
  c.allowedOrigins=c.allowedOrigins.map(s=>{try{const u=new URL(s);if(u.protocol!=='https:'||u.username||u.password||u.origin!==s)throw Error();return u.origin;}catch{throw Error('INVALID_ORIGIN');}});
  return c;
 }
-export async function readConfig(file){const stat=await readFile(file,'utf8');if(stat.length>100000)throw Error('CONFIG_TOO_LARGE');return validateConfig(JSON.parse(stat));}
+export async function readConfig(file,{identityRunner}={}){await assertBoundConfig(file,identityRunner);const stat=await readFile(file,'utf8');if(stat.length>100000)throw Error('CONFIG_TOO_LARGE');return validateConfig(JSON.parse(stat));}
 export async function initializeConfig(file){const config=validateConfig({...structuredClone(DEFAULT_CONFIG),installationId:randomUUID()});await mkdir(dirname(resolve(file)),{recursive:true});await writeFile(file,JSON.stringify(config,null,2)+'\n',{flag:'wx',mode:0o600});return {schema:config.schema,installationId:config.installationId};}
 export function browserConfig(c){return {installationId:c.installationId,workspaceName:c.workspaceName,title:c.brand.wordmark+' Workspace',wordmark:c.brand.wordmark,ownerName:c.owner.name,ownerContext:c.owner.context,locale:c.locale,timezone:c.timezone,historyDays:c.historyDays,defaultTheme:c.defaultTheme,widgets:c.widgets,allowedOrigins:c.allowedOrigins,projectName:c.projectName};}

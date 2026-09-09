@@ -43,7 +43,7 @@
     if(id==='pipeline')return pipelineWidget(wide);
     if(id==='meetings')return meetingsWidget(wide);
     if(id==='decisions')return `<p class="small muted">Nenhuma decisão incluída neste snapshot.</p>${widgetStamp('Fonte não consultada')}`;
-    if(id==='changes')return `<p class="widget-description">Ravi Workspace · registros documentados</p><div class="widget-list">${data.events.slice(0,wide?3:2).map(ev=>`<button class="widget-row" data-source="${e(ev.source)}"><time>${e(ev.time)}</time><span><strong>${e(ev.title)}</strong><small>${e(ev.description)}</small></span>${icon('arrow')}</button>`).join('')}</div>${widgetStamp('Recorte local · sem atualização automática')}`;
+    if(id==='changes')return `<p class="widget-description">Ravi Workspace · registros documentados</p><div class="widget-list">${data.events.slice(0,wide?3:2).map(ev=>`<button class="widget-row" data-source="${e(ev.source)}"><time>${e(ev.time)}</time><span><strong>${e(ev.title)}</strong><small>${e(ev.description)}</small></span>${icon('arrow')}</button>`).join('')}</div>${widgetStamp('Registros documentados · consulte a data da fonte')}`;
     return '';
   }
   function home(){
