@@ -1,0 +1,178 @@
+/* Step 6: shared optical alignment, reading rhythm and accessible controls.
+   Official 1024px asset stays byte-identical. Only its empty canvas is masked:
+   visible bounds x=239..822, y=118..891; the image always remains square. */
+:root{--control-size:44px;--radius-card:24px;--space-card:22px}
+html{scrollbar-gutter:stable;scroll-padding-bottom:100px}
+body:has(dialog[open]){overflow:hidden}
+.brand{display:grid;grid-template-columns:22px max-content;grid-template-rows:28px 14px;gap:4px 10px;align-items:center;padding:0 12px;font-size:26px;line-height:28px}
+.brand-glyph{position:relative;display:block;overflow:hidden;width:22px;height:30px;flex:none;grid-column:1;grid-row:1;transform:translateY(-2px);mix-blend-mode:var(--logo-blend)}
+.brand-glyph .brand-symbol{position:absolute;width:175.5%;height:auto;max-width:none;left:-40.9%;top:-14.8%;object-fit:contain;aspect-ratio:1;filter:var(--logo-filter);mix-blend-mode:normal}
+.brand-wordmark{grid-column:2;grid-row:1;letter-spacing:-.04em}
+.brand>.brand-sub{grid-column:2;grid-row:2;margin:0;font-size:9px;line-height:14px;letter-spacing:.12em}
+.topbar .mobile-brand{display:none}
+.side-context{margin:35px 0 13px;font-size:9px;letter-spacing:.07em;padding-inline:12px}
+.nav-link{min-height:var(--control-size);border-radius:10px}
+.side-help{font-size:12px;min-height:var(--control-size)}
+.identity{padding-top:16px;line-height:1.4}
+.identity .small{font-size:11px}
+.topbar{gap:16px}
+.context-button{min-height:var(--control-size)}
+.search-launch{min-height:var(--control-size)}
+.theme-controls{padding:3px}
+.theme-controls button{min-height:38px;min-width:38px}
+main{padding-top:28px}
+.home-dashboard-heading{margin-bottom:22px}
+.home-dashboard-heading h1{font-size:42px;margin-bottom:8px}
+.home-dayline{padding-bottom:12px;margin-bottom:6px}
+.home-dayline button{font-size:11px;min-height:var(--control-size)}
+.feed-live-controls{padding:14px 18px;margin-bottom:20px}
+.feed-live-controls p{font-size:11px}
+.home-widget{padding:var(--space-card);border-radius:var(--radius-card);box-shadow:0 4px 14px var(--shadow)}
+.widget-heading{margin-bottom:14px}
+.widget-heading h2{font-size:14px}
+.widget-row strong,.recent-agent strong{font-size:12px}
+.widget-row small,.recent-agent small{font-size:10px;line-height:1.6}
+.recent-agents{gap:10px}
+.recent-agent{min-height:44px}
+.widget-description{font-size:12px;margin-bottom:12px}
+.widget-footer{font-size:10px;padding-top:12px}
+.widget-info{width:var(--control-size);height:var(--control-size)}
+.widget-link{font-size:12px;min-height:var(--control-size)}
+.widget-metric small,.widget-subline>span{font-size:10px}
+.agenda-date{margin-bottom:16px}
+.agenda-body .widget-link{margin-top:6px}
+.agenda-row time{font-size:11px}
+.pipeline-count span{font-size:10px}
+.connection-label{font-size:10px}
+.page-heading{margin-bottom:24px}
+.page-heading>p:not(.eyebrow){line-height:1.7}
+.back{min-height:var(--control-size);margin-bottom:14px;font-size:12px}
+.breadcrumbs{font-size:11px}
+.breadcrumbs a{min-height:var(--control-size);display:inline-flex;align-items:center}
+.panel,.inventory-agent{border-radius:18px}
+.inventory-agent{padding:20px;gap:10px}
+.inventory-summary{padding:18px 20px;border-radius:18px}
+.inventory-controls{margin:20px 0 18px}
+.inventory-tab,.segments button{min-height:var(--control-size)}
+.inventory-agent .execution-badge{margin:8px 0}
+.activity-caption{padding:14px 0}
+.activity-overview{margin:20px 0}
+.activity-summary>div{border-radius:18px;padding:18px}
+.activity-summary strong{font-size:32px}
+.activity-work-row:focus-visible,.activity-event-row:focus-visible{outline-offset:-3px;border-radius:8px}
+.activity-runtime-row{min-width:0}
+.label{font-size:11px}
+.native-row{padding-block:20px}
+.native-row small{font-size:11px}
+.connector-card{padding:22px;border-radius:var(--radius-card);box-shadow:0 4px 14px var(--shadow)}
+.connector-card>header{margin-bottom:18px}
+.connector-account{margin:16px 0 20px;font-size:12px}
+.connector-card .label{font-size:10px}
+.connector-used{padding:14px 0}
+.connector-used>span,.connector-card>footer>span{font-size:10px}
+.connector-card>footer{padding-top:12px}
+.connector-management .connector-management-note,.connector-impact>p{font-size:11px}
+.connectors-intro p,.connector-file-row p{font-size:12px}
+.connectors-footnote{font-size:11px}
+.native-panel{padding:24px}
+.primary,.secondary,.source-link,.text-link,.icon-button,.clear-search{min-height:var(--control-size)}
+.icon-button,.clear-search{min-width:var(--control-size);border-radius:12px}
+.source-link,.text-link{font-size:12px}
+.page-footer,.page-footer button{font-size:11px}
+.page-footer button{min-height:var(--control-size)}
+dialog{padding-top:max(20px,env(safe-area-inset-top));padding-bottom:max(30px,env(safe-area-inset-bottom));scrollbar-gutter:stable;overscroll-behavior:contain}
+.dialog-head{gap:12px;margin-bottom:24px;padding-bottom:16px}
+.dialog-head .eyebrow{font-size:10px}
+dialog.widget-editor{inset:0;margin:auto;height:fit-content;max-height:calc(100dvh - 32px);width:min(740px,calc(100vw - 32px));border:1px solid var(--line);border-radius:24px;padding:24px}
+.widget-editor #dialog-title{font-size:28px}
+.widget-editor .editor-count{font-size:11px!important}
+.widget-editor #dialog-content .widget-option{padding:12px}
+.widget-choice-copy small{font-size:11px}
+.widget-check{width:var(--control-size);height:var(--control-size)}
+.widget-settings{margin-left:54px}
+.widget-settings button{min-height:var(--control-size);font-size:11px}
+.widget-order button{min-width:var(--control-size);font-size:17px}
+.widget-editor-actions{bottom:-24px;padding:16px 0 max(16px,env(safe-area-inset-bottom));gap:10px}
+.widget-editor-actions>.text-link{font-size:11px}
+.widget-editor .editor-note{font-size:11px!important}
+@media(max-width:1200px){.brand{padding-inline:9px;font-size:25px;column-gap:9px}}
+@media(max-width:900px){
+  .topbar{height:76px;padding-inline:24px}
+  .context-button{display:grid;grid-template-columns:15px auto 10px;grid-template-rows:20px 14px;column-gap:8px;row-gap:2px;align-items:center;text-align:left}
+  .context-button>.brand-glyph{display:block;width:15px;height:20px;grid-column:1;grid-row:1;transform:translateY(-1px)}
+  .context-label{display:contents}
+  .mobile-wordmark{grid-column:2;grid-row:1;font-size:16px;line-height:20px}
+  .context-label>span:last-child{grid-column:2;grid-row:2;font-size:10px;line-height:14px}
+  .context-button>span:last-child{grid-column:3;grid-row:1/3}
+  .theme-controls button{min-width:44px;min-height:44px}
+  .mobile-nav{padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+  .mobile-nav .nav-link{min-height:52px;font-size:10px;gap:4px;padding:6px 2px}
+}
+@media(max-width:640px){
+  :root{--space-card:20px;--radius-card:24px}
+  .topbar{height:76px;padding-inline:16px;gap:8px}
+  .search-launch{width:44px;min-width:44px;padding:10px}
+  .theme-controls{gap:0;padding:2px}
+  .theme-controls button{padding:5px;min-width:44px;min-height:44px}
+  main{padding:24px 16px 12px}
+  .home-dashboard-heading{margin-bottom:16px}
+  .home-dashboard-heading h1{font-size:36px}
+  .home-dashboard-heading .eyebrow{font-size:9px}
+  .home-dashboard-heading p:not(.eyebrow){font-size:12px;max-width:190px;line-height:1.6}
+  .customize-button{font-size:11px;margin-top:24px;padding-inline:12px}
+  .home-dayline{font-size:12px}
+  .home-dayline button{font-size:10px}
+  .feed-live-controls{padding:14px;gap:10px}
+  .feed-live-controls p{font-size:11px}
+  .feed-live-controls>button{margin-left:28px;font-size:11px}
+  .home-widget.size-wide{padding-block:20px}
+  .widget-agenda{grid-template-columns:67px minmax(0,1fr);column-gap:16px}
+  .agenda-date{margin-top:8px}
+  .agenda-date strong{font-size:52px}
+  .agenda-date span{font-size:9px}
+  .widget-agenda .widget-link{font-size:11px}
+  .widget-row strong,.recent-agent strong{font-size:13px}
+  .widget-row small,.recent-agent small{font-size:11px}
+  .recent-agents{gap:12px}
+  .widget-footer{font-size:10px}
+  .widget-subline>span{font-size:11px;max-width:none}
+  .widget-subline>.widget-link{font-size:11px}
+  .widget-settings{margin-left:0;gap:6px}
+  .widget-settings button{padding-inline:9px}
+  .widget-order span{font-size:9px;margin-right:2px}
+  .widget-order{margin-left:auto}
+  .widget-choice-copy small{font-size:10px}
+  dialog.widget-editor{padding:16px;border-radius:22px;max-height:calc(100dvh - 24px);width:calc(100vw - 24px)}
+  .widget-editor #dialog-title{font-size:25px}
+  .widget-editor-actions{bottom:-16px;gap:8px}
+  .widget-editor-actions>.text-link{font-size:10px}
+  .widget-editor-actions .primary,.widget-editor-actions .secondary{padding-inline:10px;font-size:11px}
+  .connector-card{padding:20px}
+  .native-panel{padding:20px}
+  .connector-detail-heading{align-items:center}
+  .connector-detail-heading h1{font-size:25px;overflow-wrap:anywhere}
+  .connector-detail-status>span:last-child{font-size:11px}
+  .connector-management .connector-management-note,.connector-file-row p{font-size:12px}
+  .source-link{font-size:11px}
+  .page-footer{margin-inline:16px;font-size:10px}
+}
+
+/* Transcript-derived context; preserve the shell and original meeting metadata. */
+.meeting-row{align-items:start;padding-block:18px;gap:14px}
+.meeting-copy{display:block;min-width:0}
+.meeting-row .meeting-theme{font-size:13px;line-height:1.55;white-space:normal}
+.meeting-row .meeting-original{display:block;margin-top:3px;color:var(--muted)}
+.meeting-preview{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:12px;line-height:1.7;color:var(--muted);margin-top:7px;overflow-wrap:anywhere}
+.meeting-theme-title{font-size:clamp(23px,3vw,32px);line-height:1.3;letter-spacing:-.035em;margin:20px 0 15px;max-width:30ch;overflow-wrap:anywhere}
+.meeting-summary{font-size:15px;line-height:1.85;max-width:78ch}
+.meeting-topics{display:flex;flex-wrap:wrap;gap:8px;padding:0;margin:22px 0;list-style:none}
+.meeting-topics li{padding:7px 12px;background:var(--surface-subtle);border:1px solid var(--line);border-radius:12px;font-size:12px;line-height:1.5}
+.meeting-metadata{margin-block:24px}
+.meeting-basis{border-block:1px solid var(--line);padding-block:7px}
+.meeting-basis summary{cursor:pointer;min-height:44px;align-content:center;font-size:13px}
+.meeting-basis p{font-size:12px;line-height:1.8;color:var(--muted);max-width:80ch}
+.meeting-basis summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:5px}
+@media(max-width:640px){.meeting-row{gap:10px}.meeting-row .meeting-theme{font-size:13px}.meeting-summary{font-size:14px}.meeting-topics li{font-size:11px}.meeting-metadata{grid-template-columns:minmax(0,1fr)}}
+
+/* Missing sources occupy the full widget rather than the date column. */
+.home-widget>.widget-unavailable,.home-widget>.feed-empty{grid-column:1/-1;min-width:0}

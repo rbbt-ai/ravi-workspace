@@ -1,0 +1,111 @@
+{
+  "schema": "ravi.app/v1",
+  "id": "workspace-hub",
+  "name": "Ravi Workspace",
+  "version": "0.1.0-alpha.3",
+  "description": "Workspace pessoal instalado no Ravi do usu\u00e1rio.",
+  "interfaces": {
+    "cli": {
+      "command": "ravi workspace-hub",
+      "json": true,
+      "health": "ravi workspace-hub check --json"
+    },
+    "ui": {
+      "routes": [
+        {
+          "id": "main",
+          "path": "/apps/workspace-hub",
+          "label": "Ravi Workspace",
+          "icon": "app-window",
+          "view": "main"
+        }
+      ],
+      "views": [
+        {
+          "id": "main",
+          "type": "dashboard",
+          "title": "Ravi Workspace",
+          "density": "compact",
+          "query": {
+            "operation": "workspace-hub.status"
+          },
+          "actions": [
+            {
+              "id": "check",
+              "label": "Check",
+              "icon": "shield-check",
+              "operation": "workspace-hub.check",
+              "placement": "toolbar"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "operations": {
+    "workspace-hub.help": {
+      "interface": "builtin",
+      "handler": "apps.help",
+      "mutating": false
+    },
+    "workspace-hub.show": {
+      "interface": "builtin",
+      "handler": "apps.manifest.show",
+      "mutating": false
+    },
+    "workspace-hub.check": {
+      "interface": "builtin",
+      "handler": "apps.manifest.check",
+      "mutating": false
+    },
+    "workspace-hub.status": {
+      "interface": "cli",
+      "command": "bun ./cli.mjs status --json {args}",
+      "mutating": false,
+      "permission": "workspace-hub:read"
+    },
+    "workspace-hub.init": {
+      "interface": "cli",
+      "command": "bun ./cli.mjs init --json {args}",
+      "mutating": true,
+      "permission": "workspace-hub:write"
+    },
+    "workspace-hub.build": {
+      "interface": "cli",
+      "command": "bun ./cli.mjs build --json {args}",
+      "mutating": true,
+      "permission": "workspace-hub:write"
+    }
+  },
+  "permissions": {
+    "required": [
+      "workspace-hub:read"
+    ],
+    "optional": [],
+    "mutating": [
+      "workspace-hub:write"
+    ]
+  },
+  "storage": {
+    "sqlite": [],
+    "files": []
+  },
+  "artifacts": [],
+  "events": {
+    "emits": [],
+    "consumes": []
+  },
+  "skills": [],
+  "health": {
+    "checks": [
+      {
+        "type": "builtin",
+        "handler": "apps.manifest.check"
+      }
+    ]
+  },
+  "versioning": {
+    "compatibility": "semver",
+    "migrations": []
+  }
+}

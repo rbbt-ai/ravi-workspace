@@ -1,0 +1,17 @@
+{
+  "name": "ravi-workspace",
+  "version": "0.1.0-alpha.3",
+  "private": true,
+  "type": "module",
+  "description": "Workspace instal\u00e1vel para usu\u00e1rios do Ravi.",
+  "engines": {
+    "bun": ">=1.3.14"
+  },
+  "scripts": {
+    "status": "bun src/apps/workspace-hub/cli.mjs status --json",
+    "test": "bun test tests",
+    "test:distribution": "python3 -B -m unittest discover -s tests -p 'test_*.py'",
+    "package:audit": "python3 scripts/distribution.py audit",
+    "package:build": "python3 scripts/distribution.py build"
+  }
+}

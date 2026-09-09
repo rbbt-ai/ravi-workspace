@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Ravi Workspace — instalação</title>
+  <style>
+    :root{color-scheme:light dark;--bg:#f4f5f6;--surface:#fff;--ink:#16202a;--muted:#566574;--line:#d4dce3;--accent:#1960a1}
+    @media(prefers-color-scheme:dark){:root{--bg:#101419;--surface:#191f27;--ink:#eef3f8;--muted:#b8c5d2;--line:#3b4755;--accent:#9dcfff}}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,sans-serif}main{max-width:760px;margin:8vh auto;padding:24px}header{margin-bottom:32px}h1{font-size:clamp(32px,6vw,48px);line-height:1.1;margin:8px 0 16px;letter-spacing:-.04em}h2{font-size:22px;margin-top:0}p{color:var(--muted)}.eyebrow{color:var(--accent);font-size:13px;font-weight:650;letter-spacing:.09em;text-transform:uppercase}section{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px;margin-bottom:20px}dl{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}dt{color:var(--muted)}dd{margin:0;text-align:right;overflow-wrap:anywhere}button{font:inherit;min-height:44px;padding:8px 18px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);cursor:pointer}button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}footer{color:var(--muted);font-size:14px}#error{color:var(--accent)}@media(max-width:420px){main{margin:20px auto;padding:16px}section{padding:20px}}
+  </style>
+</head>
+<body>
+<main id="installation">
+  <header><p class="eyebrow">Configuração do aplicativo</p><h1>Ravi Workspace</h1><p>Confira a instalação antes de configurar suas fontes.</p></header>
+  <section aria-labelledby="package-title"><h2 id="package-title">Pacote instalado</h2><dl><dt>Versão</dt><dd id="version">Verificando…</dd><dt>Manifesto</dt><dd id="manifest">Verificando…</dd><dt>Interface</dt><dd id="frontend">Verificando…</dd><dt>Fontes configuradas</dt><dd id="sources">Verificando…</dd></dl><button id="refresh" type="button">Verificar novamente</button><p id="error" role="status" aria-live="polite"></p></section>
+  <section><h2>Próximo passo</h2><p id="setup">Aguardando verificação da instalação.</p><p>Esta versão valida o pacote. A configuração de contas e a Home com fontes do usuário serão disponibilizadas nas próximas fases.</p></section>
+  <footer>Diagnóstico local. Nenhuma conversa, reunião ou conta é consultada nesta tela.</footer>
+</main>
+<script>
+  async function refresh(){
+    const status=document.querySelector('#error');status.textContent='Verificando…';
+    try{
+      const response=await fetch('/installation.json',{cache:'no-store'});if(!response.ok)throw Error();
+      const data=await response.json();if(data.schema!=='workspace.installation/v1'||data.scope!=='package-diagnostics')throw Error();
+      document.querySelector('#version').textContent=data.version;
+      document.querySelector('#manifest').textContent=data.installation.manifestAvailable?'Disponível':'Indisponível';
+      document.querySelector('#frontend').textContent=data.installation.frontendAvailable?'Disponível':'Indisponível';
+      document.querySelector('#sources').textContent=String(data.setup.configuredSources);
+      document.querySelector('#setup').textContent=data.setup.reason;
+      status.textContent='Verificação concluída.';
+    }catch{status.textContent='Não foi possível verificar. Execute a prévia local pelo pacote e tente novamente.';}
+  }
+  document.querySelector('#refresh').addEventListener('click',refresh);refresh();
+</script>
+</body>
+</html>

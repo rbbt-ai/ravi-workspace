@@ -1,0 +1,68 @@
+  const feedDate = value => !value?'Não consultado':new Intl.DateTimeFormat(config.locale,{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',timeZone:config.timezone}).format(new Date(value));
+  const feedLink = (url,text,cls='widget-link') => {
+    try{const u=new URL(url);if(u.protocol!=='https:'||u.username||u.password||!config.allowedOrigins.includes(u.origin))return '';if(u.hostname==='www.google.com'&&!u.pathname.startsWith('/calendar/'))return '';return `<a class="${cls}" href="${e(u.href)}" target="_blank" rel="noopener noreferrer">${e(text)} ${icon('arrow')}</a>`;}catch{return '';}
+  };
+  let agendaData = homeData.feeds.agenda;
+  let meetingData = homeData.feeds.meetings;
+  let agendaItems = agendaData.items||[];
+  let meetingItems = meetingData.items||[];
+  const dayDate = date => new Date(`${String(date).slice(0,10)}T12:00:00Z`);
+  const dayPart = (date,options) => !date?'Não informado':new Intl.DateTimeFormat(config.locale,{...options,timeZone:'UTC'}).format(dayDate(date));
+  const eventTime = event => event.allDay?'Dia inteiro':new Intl.DateTimeFormat(config.locale,{hour:'2-digit',minute:'2-digit',timeZone:config.timezone}).format(new Date(event.start));
+  const lastAllDay = date => new Date(Date.parse(`${date}T12:00:00Z`)-86400000).toISOString().slice(0,10);
+  const eventResponse = event => ({accepted:'Confirmado',tentative:'Talvez',needsAction:'Convite sem resposta',unknown:'Na agenda'}[event.response]||'Na agenda');
+  const dayIsCurrent = () => agendaData.date===new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:config.timezone}).format(new Date());
+  const agendaNotice = () => dayIsCurrent()?'':`<p class="feed-stale">Esta agenda é de ${dayPart(agendaData.date,{day:'2-digit',month:'2-digit'})}. ${feedLiveAvailable?'Atualização do novo dia pendente.':'A prévia não atualiza automaticamente.'}</p>`;
+  const agendaRow = event => link(`/agenda/${event.id}`,`<time>${e(eventTime(event))}</time><span><strong>${e(event.title)}</strong><small>${e(eventResponse(event))}</small></span>${icon('arrow')}`,'widget-row agenda-row');
+  function agendaWidget(wide){
+    if(agendaData.status!=='ready')return `${widgetEmpty('agenda')}${widgetStamp('Agenda não consultada','feed-agenda')}`;
+    return `<div class="agenda-date"><span>${e(dayPart(agendaData.date,{weekday:'short'}).replace('.','').toUpperCase())}</span><strong>${e(dayPart(agendaData.date,{day:'2-digit'}))}</strong><span>${e(dayPart(agendaData.date,{month:'long'}).toUpperCase())}</span></div><div class="agenda-body">${agendaNotice()}${agendaItems.length?`<p class="widget-description">${agendaItems.length} compromisso${agendaItems.length===1?'':'s'} · agenda principal</p><div class="widget-list">${agendaItems.slice(0,wide?5:3).map(agendaRow).join('')}</div>`:`<div class="feed-empty"><span class="connection-label">Google · agenda principal</span><h3>Sem compromissos registrados</h3><p>Não há eventos nesta agenda para ${dayPart(agendaData.date,{day:'numeric',month:'long'})}.</p></div>`}${link('/agenda',`Ver o dia ${icon('arrow')}`,'widget-link')}</div>${feedLiveStamp('agenda',`Consultada · ${feedDate(agendaData.capturedAt)}`)}`;
+  }
+  function agendaPage(){
+    if(agendaData.status!=='ready')return `${back('/home')}${heading('Agenda','Fonte ainda não disponível.')}<section class="panel">${widgetEmpty('agenda')}</section>`;
+    return `${back('/home')}${heading(dayPart(agendaData.date,{weekday:'long',day:'numeric',month:'long'}),config.timezone,'Seu dia')}${agendaNotice()}<p class="feed-context">Consultada em ${feedDate(agendaData.capturedAt)}. ${homeButton('feed-agenda','Origem e atualização')}</p><section class="panel">${agendaItems.length?agendaItems.map(agendaRow).join(''):`<div class="feed-empty"><h2>Sem compromissos registrados</h2><p>A consulta deste dia não retornou eventos na agenda principal. Outros calendários não estão incluídos.</p></div>`}${feedLink(agendaData.url,'Abrir Google Calendar')}</section>`;
+  }
+  function agendaDetail(id){
+    const event=agendaItems.find(v=>v.id===id);if(!event)return missing();
+    return `${back('/agenda')}${heading(event.title,'Agenda principal · Google Calendar','Compromisso')}<section class="panel"><dl class="work-metadata"><div><dt>Início</dt><dd>${e(event.allDay?dayPart(event.start,{day:'numeric',month:'long'}):feedDate(event.start))}${event.allDay?' · dia inteiro':''}</dd></div><div><dt>${event.allDay?'Último dia':'Término'}</dt><dd>${e(event.allDay?dayPart(lastAllDay(event.end),{day:'numeric',month:'long'}):feedDate(event.end))}</dd></div><div><dt>Seu convite</dt><dd>${e(eventResponse(event))}</dd></div><div><dt>Fuso da exibição</dt><dd>${e(config.timezone)}</dd></div></dl>${feedLink(event.url,'Abrir compromisso no Google')}${homeButton('feed-agenda','Origem e atualização')}</section>`;
+  }
+  const meetingTheme = meeting => meeting.analysis?.state==='reviewed'?meeting.analysis.theme:meeting.analysis?.state==='insufficient'?'Amostra insuficiente':'Tema em análise';
+  const meetingExcerpt = meeting => meeting.analysis?.state==='reviewed'?meeting.analysis.preview:meeting.analysis?.limitation||'Transcrição disponível; conteúdo ainda não revisado.';
+  const meetingRow = meeting => link(`/meetings/${meeting.id}`,`<span class="meeting-date"><strong>${e(shortDate(meeting.happenedAt))}</strong><small>${e(new Intl.DateTimeFormat(config.locale,{hour:'2-digit',minute:'2-digit',timeZone:config.timezone}).format(new Date(meeting.happenedAt)))}</small></span><span class="meeting-copy"><strong class="meeting-theme">${e(meetingTheme(meeting))}</strong><small class="meeting-original">${e(meeting.title)}</small><span class="meeting-preview">${e(meetingExcerpt(meeting))}</span></span>${icon('arrow')}`,'widget-row meeting-row');
+  function meetingsWidget(wide){
+    if(meetingData.status!=='ready')return `${widgetEmpty('meetings')}${widgetStamp('tl;dv · fonte pendente','feed-meetings')}`;
+    return `<div class="widget-subline"><span>Últimas transcritas · recorte consultado</span><span class="connection-label">tl;dv</span></div>${meetingItems.length?`<div class="widget-list">${meetingItems.slice(0,wide?3:2).map(meetingRow).join('')}</div>${link('/meetings',`Ver ${meetingItems.length} reuniões ${icon('arrow')}`,'widget-link')}`:`<div class="feed-empty"><h3>Nenhuma transcrição neste recorte</h3><p>Não encontramos reuniões com transcrição disponível no recorte consultado.</p></div>`}${feedLiveStamp('meetings',`Consultadas · ${feedDate(meetingData.capturedAt)}`)}`;
+  }
+  function meetingsPage(){
+    if(meetingData.status!=='ready')return `${back('/home')}${heading('Reuniões transcritas','Fonte ainda não disponível.')}<section class="panel">${widgetEmpty('meetings')}</section>`;
+    return `${back('/home')}${heading('Reuniões transcritas','Retome suas últimas conversas com a transcrição à mão.','tl;dv')}<p class="feed-context">${meetingItems.length} reuniões · recorte de ${shortDate(meetingData.from)} a ${shortDate(meetingData.through)} · horários de ${e(config.timezone)}. ${homeButton('feed-meetings','Origem e atualização')}</p><section class="panel">${meetingItems.length?meetingItems.map(meetingRow).join(''):'<p>Nenhuma transcrição disponível neste recorte.</p>'}</section>`;
+  }
+  function meetingDetail(id){
+    const meeting=meetingItems.find(m=>m.id===id);if(!meeting)return missing();
+    const a=meeting.analysis,reviewed=a?.state==='reviewed';
+    const clock=seconds=>`${Math.floor(seconds/60)}:${String(Math.floor(seconds%60)).padStart(2,'0')}`;
+    return `${back('/meetings')}${heading(meeting.title,`${feedDate(meeting.happenedAt)} · ${e(config.timezone)}`,'Reunião · tl;dv')}<section class="panel meeting-detail"><span class="connection-label">${reviewed?'Prévia da transcrição':'Transcrição disponível'}</span><h2 class="meeting-theme-title">${e(meetingTheme(meeting))}</h2><p class="meeting-summary">${e(meetingExcerpt(meeting))}</p>${reviewed?`<ul class="meeting-topics" aria-label="Assuntos identificados">${a.topics.map(t=>`<li>${e(t)}</li>`).join('')}</ul>`:''}<div class="dialog-note">${e(a?.limitation||'O título original não determina o tema. A análise de conteúdo ainda está pendente.')}</div><dl class="work-metadata meeting-metadata"><div><dt>Reunião</dt><dd>${e(feedDate(meeting.happenedAt))}</dd></div><div><dt>Última consulta</dt><dd>${e(feedDate(meetingData.capturedAt))}</dd></div><div><dt>Amostra consultada</dt><dd>${a?.sampledAt?e(feedDate(a.sampledAt)):'Ainda não revisada'}</dd></div><div><dt>Síntese revisada</dt><dd>${a?.synthesizedAt?e(feedDate(a.synthesizedAt)):'Pendente'}</dd></div></dl>${a?.synthesizedAt?`<details class="meeting-basis"><summary>Como esta prévia foi formada</summary><p>${a.windowCount} trechos distribuídos · ${a.sampledSegments} de ${a.totalSegments} falas. A transcrição completa não foi copiada para o Workspace.</p>${a.evidence?.length?`<p>Trechos que sustentam a leitura: ${a.evidence.map(v=>e(clock(v.from)+'–'+clock(v.to))).join(' · ')}.</p>`:''}</details>`:''}${feedLink(meeting.url,'Abrir reunião e transcrição','primary')}<p class="feed-context">Título, data e link originais do tl;dv. Horários de ${e(config.timezone)}. O acesso à transcrição depende da sua conta no provedor.</p>${homeButton('feed-meetings','Origem e atualização')}</section>`;
+  }
+  const pipelineGroups = [{id:'active',name:'Base ativa'},{id:'priority',name:'Prioridades'},{id:'lead',name:'Leads a tratar'},{id:'review',name:'Requalificar'}];
+  let pipelineData = homeData.feeds.pipeline;
+  let pipelineItems = pipelineData.items||[];
+  const pipelineCounts = () => pipelineGroups.map(g=>({...g,count:pipelineItems.filter(p=>p.group===g.id).length}));
+  function pipelineWidget(wide){
+    if(pipelineData.status!=='ready')return `${widgetEmpty('pipeline')}${widgetStamp('Pipeline · fonte pendente','feed-pipeline')}`;
+    return `<p class="widget-description">${pipelineItems.length} frentes comerciais</p><div class="pipeline-counts">${pipelineCounts().map(g=>link(`/pipeline?stage=${g.id}`,`<strong>${g.count}</strong><span>${e(g.name)}</span>`,`pipeline-count stage-${g.id}`)).join('')}</div><div class="widget-list">${pipelineItems.filter(p=>p.group==='priority').slice(0,wide?3:2).map(p=>link(`/pipeline/${p.id}`,`<span><strong>${e(p.title)}</strong><small>${e(p.status)} · ${e(p.short)}</small></span>${icon('arrow')}`,'widget-row')).join('')}</div>${link('/pipeline',`Ver as ${pipelineItems.length} frentes ${icon('arrow')}`,'widget-link')}${nativeLiveStamp('pipeline',`Revisão da fonte · ${shortDate(pipelineData.sourceCheckedAt)}`,'feed-pipeline')}`;
+  }
+  function pipelinePage(params){
+    if(pipelineData.status!=='ready')return `${back('/home')}${heading('Pipeline de clientes','A fonte ainda não está disponível.',config.workspaceName)}<section class="panel">${widgetEmpty('pipeline')}</section>`;
+    const group=pipelineGroups.find(g=>g.id===params.get('stage'));
+    const items=group?pipelineItems.filter(p=>p.group===group.id):pipelineItems;
+    return `${back('/home')}${heading('Pipeline de clientes','Base ativa, oportunidades e próximos movimentos.',config.workspaceName)}<p class="feed-context">Revisão registrada em ${feedDate(pipelineData.sourceCheckedAt)} · ${feedLiveAvailable?'fonte local da Page consultada nesta sessão; dados revisados na data indicada.':'cópia da mesa, sem atualização automática.'} ${homeButton('feed-pipeline','Origem e limites')}</p><div class="feed-filters" aria-label="Etapas do pipeline">${link('/pipeline',`Todas · ${pipelineItems.length}`,`feed-filter ${!group?'selected':''}`)}${pipelineCounts().map(g=>link(`/pipeline?stage=${g.id}`,`${e(g.name)} · ${g.count}`,`feed-filter ${group?.id===g.id?'selected':''}`)).join('')}</div><div class="native-list">${items.map(p=>link(`/pipeline/${p.id}`,`<span class="pipeline-dot stage-${p.group}"></span><span><h2>${e(p.title)}</h2><p>${e(p.short)}</p><small>${e(p.status)} · ${e(p.owner||'Responsável não informado')}</small><p class="pipeline-next">${e(p.next)}</p></span>${icon('arrow')}`,'native-row pipeline-row')).join('')}</div>`;
+  }
+  function pipelineDetail(id){
+    const p=pipelineItems.find(p=>p.id===id);if(!p)return missing();
+    return `${back('/pipeline')}${heading(p.title,p.short,'Pipeline')}<section class="panel"><dl class="work-metadata"><div><dt>Faixa da mesa</dt><dd>${e(pipelineGroups.find(g=>g.id===p.group)?.name)}</dd></div><div><dt>Etapa registrada</dt><dd>${e(p.status)}</dd></div><div><dt>Responsável registrado</dt><dd>${e(p.owner||'Não informado')}</dd></div><div><dt>Verificação na fonte</dt><dd>${e(p.checked)}</dd></div></dl><h2 class="native-section-title">Contexto</h2><p>${e(p.summary)}</p><h2 class="native-section-title">Próximo movimento registrado</h2><p>${e(p.next)}</p><div class="dialog-note">Snapshot da mesa revisada em ${shortDate(pipelineData.sourceCheckedAt)}. Valores, probabilidade e data de fechamento não estão disponíveis nesta fonte.</div>${homeButton('feed-pipeline','Ver origem e atualização')}${feedLink(pipelineData.url,'Abrir Page do pipeline')}</section>`;
+  }
+  function feedSource(id){
+    const f=homeData.feeds[id];if(!f)return;
+    if(f.status!=='ready'){showDialog(f.source,'Fonte pendente',`<p>${e(f.reason)}</p><div class="dialog-note">${e(f.text)}</div>`);return;}
+    showDialog(f.source,'Origem e atualização',`<p>${e(f.description)}</p><p>Consultado em ${feedDate(f.capturedAt)} · ${e(config.timezone)}.</p><div class="dialog-note">${e(f.limit)}</div>${feedLink(f.url,'Abrir fonte original')}${id==='agenda'||id==='meetings'?link(`/connectors/${id==='agenda'?'google-calendar':'tldv'}`,`Gerenciar conexão ${icon('arrow')}`,'widget-link'):''}`);
+  }

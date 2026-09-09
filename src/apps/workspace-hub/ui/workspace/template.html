@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f5f6fa">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; font-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>/*__TITLE__*/</title>
+  <link rel="icon" href="/*__LOGO_URI__*/">
+  <script id="workspace-config" type="application/json">/*__CONFIG__*/</script><script>/*__THEME__*/</script>
+  <style>/*__STYLE__*/</style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Ir para o conteúdo</a>
+  <aside class="sidebar" aria-label="Navegação principal">
+    <a class="brand" href="#/home" data-route="/home" data-focus-key="brand" aria-label="/*__TITLE__*/ — Home"><span class="brand-glyph" aria-hidden="true"><img class="brand-symbol" src="/*__LOGO_URI__*/" alt="" width="1024" height="1024"></span><span class="brand-wordmark">/*__WORDMARK__*/</span><span class="brand-sub">workspace</span></a>
+    <div class="side-context"><span class="context-dot" aria-hidden="true"></span><span>/*__WORKSPACE_NAME__*/</span></div>
+    <nav id="desktop-nav"></nav>
+    <div class="side-bottom"><button class="side-help" data-action="appearance">Identidade e cores <span aria-hidden="true">◐</span></button><button class="side-help" data-action="about">Sobre o workspace <span aria-hidden="true">↗</span></button><div class="identity"><span class="avatar person">/*__INITIALS__*/</span><span>/*__OWNER_NAME__*/<span class="muted small">/*__OWNER_CONTEXT__*/</span></span></div></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar">
+      <button class="context-button" data-action="context" aria-label="Ver contexto e cobertura"><span class="brand-glyph mobile-brand" aria-hidden="true"><img class="brand-symbol" src="/*__LOGO_URI__*/" alt="" width="1024" height="1024"></span><span class="context-label"><span class="mobile-wordmark">/*__WORDMARK__*/</span><span>Seu workspace</span></span><span aria-hidden="true">⌄</span></button>
+      <button class="search-launch" data-route="/search" data-focus-key="search-launch" aria-label="Buscar no workspace"><span data-icon="search"></span><span>Buscar no workspace</span><kbd>⌘ K</kbd></button>
+      <button class="preview-label" data-action="about">Dados da instalação <span aria-hidden="true">ⓘ</span></button>
+      <div class="theme-controls" role="group" aria-label="Aparência do workspace"><button type="button" data-action="theme-day" data-theme-choice="day" aria-label="Modo day" aria-pressed="false" title="Modo day"><span data-icon="sun"></span><span class="theme-label">Day</span></button><button type="button" data-action="theme-dark" data-theme-choice="dark" aria-label="Modo dark" aria-pressed="false" title="Modo dark"><span data-icon="moon"></span><span class="theme-label">Dark</span></button></div>
+    </header>
+    <main id="main" tabindex="-1"></main>
+    <footer class="page-footer"><span>/*__TITLE__*/ · dados da instalação</span><button data-action="appearance">Identidade e cores</button><button data-action="context">Ver alcance dos dados</button></footer>
+  </div>
+  <nav id="mobile-nav" class="mobile-nav" aria-label="Navegação principal no celular"></nav>
+  <dialog id="detail-dialog" aria-labelledby="dialog-title"><div class="dialog-head"><span class="eyebrow" id="dialog-label">Contexto</span><button class="icon-button" data-action="close-dialog" aria-label="Fechar detalhe">×</button></div><div id="dialog-content"></div></dialog>
+  <div id="announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  <noscript><p class="noscript">Habilite JavaScript para percorrer esta prévia local. Ela não faz conexão com serviços externos.</p></noscript>
+  <script id="workspace-data" type="application/json">/*__DATA__*/</script>
+  <script>/*__APP__*/</script>
+</body>
+</html>
