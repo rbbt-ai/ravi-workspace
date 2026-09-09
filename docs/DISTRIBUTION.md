@@ -1,6 +1,6 @@
 # Pacote distribuível
 
-Versão de preparação: `0.1.0-alpha.3`. O repositório privado e o pacote contêm código, manifesto, componentes de frontend, documentos, licenças e testes. Não incluem configuração de instalação, snapshot ou credenciais. O frontend completo é gerado após `init`, com o UUID e as fontes daquela instalação; nenhum UUID compartilhado é embutido na release.
+Versão: `0.1.0-alpha.7`. O repositório público e o pacote contêm código, manifesto, componentes de frontend, documentos, licenças e testes. Não incluem configuração de instalação, snapshot ou credenciais. O frontend completo é gerado após `init`, com o UUID e as fontes daquela instalação; nenhum UUID compartilhado é embutido na release.
 
 ## Pré-requisitos
 
@@ -29,7 +29,7 @@ O tar inclui arquivos ordenados, modo 0644, proprietário/grupo vazios, IDs e ti
 
 ## Verificação e uso
 
-Obtenha o SHA-256 pelo recibo confiável da preparação privada. Não use um checksum recebido de uma origem desconhecida como prova de autoria.
+Obtenha o SHA-256 pela release oficial e seu recibo de preparação. Não use um checksum recebido de uma origem desconhecida como prova de autoria.
 
 ```sh
 python3 scripts/distribution.py verify ../releases/ravi-workspace-0.1.0-alpha.3.tar.gz --sha256 <sha256-do-recibo>
@@ -39,10 +39,10 @@ O verificador confere o arquivo externo, metadados, caminhos, allowlist e cada h
 
 O diretório de App é `src/apps/workspace-hub/`. A CLI nativa descobre esse diretório em `apps/<id>` do estado Ravi, mas não foi encontrado instalador/atualizador oficial. Não substituir diretórios existentes nem criar grants automaticamente. Lifecycle e migrações serão entregues na fase correspondente.
 
-## Publicação privada
+## Distribuição do código
 
-O repositório contém apenas o histórico auditado do produto. Snapshots e dados privados nunca devem entrar no Git, mesmo em repositório privado. Não reutilizar os workflows/deploys de outro produto. Esta fase não configura hospedagem pública, release pública, marketplace, GitHub Actions com segredos ou contas de piloto.
+O repositório contém apenas o histórico auditado do produto. Snapshots e dados privados nunca devem entrar no Git, mesmo em repositório privado. Não reutilizar os workflows/deploys de outro produto. O repositório e as releases do código são públicos. As instalações e os dados de cada usuário continuam separados; publicar o código não publica o Workspace pessoal. Não há marketplace ou contas de piloto embutidas.
 
 ## Limites
 
-O pacote já apresenta a Home completa por configuração, porém onboarding de fontes, operação independente, atualização e piloto continuam em preparação. Um checkout limpo e duas configurações na mesma máquina não certificam dois usuários reais. Licença do produto permanece restrita à preparação privada; componentes terceiros mantêm suas licenças próprias.
+O pacote inclui Home, orientação inicial, consulta de fontes, instalação individual, atualização e recuperação. Um checkout limpo e duas configurações na mesma máquina não certificam dois usuários reais. A visibilidade pública do repositório não altera a licença do produto; componentes terceiros mantêm suas licenças próprias.

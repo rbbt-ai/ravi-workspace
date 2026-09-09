@@ -81,6 +81,7 @@ export async function collect(file,{inventoryLoader=discover,calendarLoader=cale
  }
  const candidate={schema:'workspace.snapshot/v1',installationId:config.installationId,capturedAt:now,presentation:strip(data),sourceStates:state};
  const sanitized=projectSnapshot(candidate,config);candidate.presentation=strip(sanitized);
+ for(const name of ['agents','projects','tasks'])if(results[name]?.status==='ready')results[name].count=name==='agents'?sanitized.agents.length:sanitized.home[name].length;
  await atomic(snapshotPath(file),candidate);
  return {status:Object.values(results).some(r=>r.status==='ready')?'collected':'unavailable',capturedAt:now,results,inventory};
 });}

@@ -77,8 +77,8 @@ OPERATIONS.md. Não é um comando para apagar a conta Ravi ou revogar integraç�
 
 ## Compartilhar com o time
 
-Compartilhe o link do repositório/release **privados**, ou somente o arquivo de
+Compartilhe o link do repositório/release **públicos**, ou somente o arquivo de
 release auditado com colegas. Não compartilhe o diretório instalado, estado,
 backups, configuração ou snapshots. O acesso ao GitHub continua sendo o acesso
-normal do integrante ao repositório privado; o pacote também pode ser entregue
+normal do integrante ao repositório; o pacote também pode ser entregue
 pelo proprietário a quem não usa GitHub. Cada pessoa executa sua instalação.

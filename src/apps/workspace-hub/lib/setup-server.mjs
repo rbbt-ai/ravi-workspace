@@ -16,7 +16,8 @@ export async function startSetup(configFile,{port=0,inventoryLoader=discover,col
    if(request.method==='GET'&&url.pathname==='/'){
     const config=await readConfig(configFile),snapshot=await readSnapshot(configFile),rendered=await renderWorkspace(config,snapshot,dirname(resolve(configFile)));
     const ui=new URL('../ui/workspace/',import.meta.url),css=await readFile(new URL('setup.css',ui),'utf8'),script=await readFile(new URL('setup.js',ui),'utf8');
-    const html=rendered.html.replace("connect-src 'none'","connect-src 'self'").replace('</head>',`<style>${css}</style></head>`).replace('</body>',`<script>window.workspaceSetupNonce=${JSON.stringify(nonce)};</script><script>${script}</script></body>`);
+    const bootstrap={installationId:config.installationId,firstRun:config.sources.length===0,needsCollection:config.sources.length>0&&!snapshot};
+    const html=rendered.html.replace("connect-src 'none'","connect-src 'self'").replace('</head>',`<style>${css}</style></head>`).replace('</body>',`<script>window.workspaceSetupNonce=${JSON.stringify(nonce)};window.workspaceSetupBootstrap=${JSON.stringify(bootstrap).replace(/</g,'\\u003c')};</script><script>${script}</script></body>`);
     return new Response(html,{headers:{...headers,'Content-Type':'text/html; charset=utf-8'}});
    }
    if(request.method!=='POST')return json({error:'NOT_FOUND'},404);

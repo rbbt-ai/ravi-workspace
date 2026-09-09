@@ -52,3 +52,18 @@ test('HTTP setup rejects foreign origin and unknown nonce; cancel performs no wr
   expect((await fetch(origin+'/config.json')).status).toBe(404);expect(await readFile(file,'utf8')).toBe(before);
  }finally{server.stop(true);}
 });
+test('first access guides empty installations; configured data is not treated as first use',async()=>{
+ const {file,config}=await installation();const server=await startSetup(file,{inventoryLoader:async()=>inventory()});
+ const bootstrap=async()=>{const html=await (await fetch('http://127.0.0.1:'+server.port)).text();return JSON.parse(html.match(/window.workspaceSetupBootstrap=(\{[^;]+\});/)[1]);};
+ try{
+  expect(await bootstrap()).toEqual({installationId:config.installationId,firstRun:true,needsCollection:false});
+  await saveSetup(file,input(config),inventory());
+  expect((await bootstrap()).firstRun).toBe(false);expect((await bootstrap()).needsCollection).toBe(true);
+  await collect(file,{inventoryLoader:async()=>inventory()});expect((await bootstrap()).needsCollection).toBe(false);
+ }finally{server.stop(true);}
+});
+test('collection reports selected records, including confirmed empty sources',async()=>{
+ const {file,config}=await installation();await saveSetup(file,input(config),inventory());
+ const r=await collect(file,{inventoryLoader:async()=>({...inventory(),projects:[...inventory().projects,{id:'not-selected',title:'Unselected test'}]})});
+ expect(r.results.projects.count).toBe(1);expect(r.results.agents.count).toBe(1);expect(r.results.tasks.count).toBe(0);
+});

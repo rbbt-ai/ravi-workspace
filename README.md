@@ -4,7 +4,7 @@ Seu Workspace no seu Ravi: Home com widgets, Trabalho, Agentes, Alerts e Connect
 
 ## Instalar
 
-Requer Ravi instalado e Bun 1.3.14 ou superior. No seu computador, com acesso ao repositório privado:
+Requer Ravi instalado e Bun 1.3.14 ou superior. No seu computador:
 
 ```sh
 git clone https://github.com/rbbt-ai/ravi-workspace.git
@@ -12,10 +12,19 @@ cd ravi-workspace
 bun run install:workspace
 ```
 
-Também funciona a partir do pacote `.tar.gz` da [versão privada](https://github.com/rbbt-ai/ravi-workspace/releases): extraia, entre na pasta e rode o mesmo comando.
+Também funciona a partir do pacote `.tar.gz` da [versão disponível](https://github.com/rbbt-ai/ravi-workspace/releases): extraia, entre na pasta e rode o mesmo comando.
 
 Depois, peça ao **seu Ravi**: **“Abra meu Workspace com `ravi workspace-hub open`.”**
-Abra o endereço local informado (por padrão http://127.0.0.1:4318), clique em **Configurar fontes**, selecione o que usar e consulte suas fontes. A Home começa vazia. Google Calendar, tl;dv e pipeline são opcionais; ausência de integração aparece explicitamente.
+Abra o endereço local informado (por padrão http://127.0.0.1:4318). No primeiro acesso, o Workspace guia você:
+
+1. **Escolher meus dados** consulta os registros disponíveis no seu Ravi.
+2. Ajuste os agentes, conversas, projetos e tarefas e clique em **Revisar seleção**.
+3. **Salvar e carregar Home** consulta as fontes e mostra o resultado de cada uma.
+4. **Abrir minha Home** mostra os dados carregados. Personalize os widgets quando quiser.
+
+Se optar por explorar primeiro, **Escolher meus dados** continua em destaque na Home. **Configurar fontes** no topo permite voltar à seleção depois. Google Calendar, tl;dv e pipeline são opcionais; você não precisa deles para começar. Se uma fonte estiver indisponível, a tela explica o próximo passo e permite tentar novamente.
+
+Já instalou a alpha.6 e abriu uma Home vazia? Atualize abaixo para receber a orientação inicial. [Guia das fontes e solução de problemas](docs/ONBOARDING.md).
 
 ## Atualizar ou voltar
 
@@ -38,7 +47,7 @@ bun run rollback:workspace
 
 ## Alcance desta versão
 
-Versão **0.1.0-alpha.6**, prévia interna privada. Instalação e recuperação são do pacote, sem editar o núcleo Ravi, conceder permissões ou copiar credenciais. O diretório padrão segue o estado já configurado do Ravi, normalmente `~/.ravi`.
+Versão **0.1.0-alpha.7**, prévia com repositório público. A licença do produto não foi convertida em licença open source. Instalação e recuperação são do pacote, sem editar o núcleo Ravi, conceder permissões ou copiar credenciais. O diretório padrão segue o estado já configurado do Ravi, normalmente `~/.ravi`.
 
 A Home local usa o ambiente de cada pessoa. Permissões e integrações existentes são respeitadas. O navegador remoto não executa comandos do computador: acesso remoto privado e atualização periódica são opcionais, descritos em [OPERATIONS.md](docs/OPERATIONS.md).
 

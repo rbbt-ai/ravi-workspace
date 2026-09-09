@@ -4,36 +4,41 @@ O Workspace pode ser configurado pelo próprio shell e consultar fontes disponí
 no Ravi que o executa. As operações trabalham com uma configuração externa por
 instalação. A escolha de uma fonte não concede acesso nem altera contas.
 
-## Abrir a configuração
+## Começar após instalar
 
-Depois de disponibilizar o App no seu Ravi, o contrato é:
+Peça ao **seu Ravi**: **“Abra meu Workspace com `ravi workspace-hub open`.”**
+Abra o endereço local que ele informar. No primeiro acesso, aparece **Vamos preencher sua Home**.
+
+1. **Escolher meus dados** consulta agentes, conversas, projetos e tarefas disponíveis no seu Ravi.
+2. Os registros visíveis vêm pré-selecionados para revisão. Abra cada lista para selecionar ou remover itens; **Selecionar todos** e **Limpar seleção** ajudam em listas maiores. Selecionar uma conversa inclui seu agente; remover o agente também remove suas conversas da seleção.
+3. **Revisar seleção** mostra as fontes e os totais que serão usados. **Voltar** permite ajustar; **Cancelar** não grava nada.
+4. **Salvar e carregar Home** salva a escolha e consulta as fontes. O resultado distingue dados carregados, recorte vazio e fonte indisponível.
+5. **Abrir minha Home** exibe os dados. Use o editor de widgets para organizar a página.
+
+Google Calendar e tl;dv ficam em **Agenda e reuniões (opcional)**. Não são necessários para começar. Nome, fuso, período e aparência estão em **Preferências da Home**. Arquivos revisados e links ficam na seção avançada.
+
+**Explorar primeiro** fecha a orientação sem salvar. O convite **Escolher meus dados** continua visível na Home, inclusive após recarregar a página. Instalações já configuradas abrem normalmente, com **Configurar fontes** no topo para editar a seleção.
+
+### Quando os dados não aparecem
+
+- **Consulta confirmada, nenhum registro:** confira os itens selecionados e o período em Preferências. Uma lista vazia confirmada é diferente de falta de acesso.
+- **Consulta indisponível / acesso recusado:** peça ao seu Ravi: “Verifique o acesso às minhas fontes e reabra o Workspace.” Depois use **Tentar novamente**. O Workspace não amplia permissões por conta própria.
+- **Seleção salva; consulta não concluída:** use **Tentar consulta novamente**. Não é preciso refazer a seleção. Os dados anteriores são preservados.
+- **Google ou tl;dv não configurado:** configure a integração no seu Ravi primeiro; não cole senhas, tokens ou chaves nesta interface. Use as outras fontes enquanto isso.
+- **Home vazia na alpha.6:** encerre a prévia, atualize com `bun run update:workspace` na pasta da versão nova e peça ao Ravi para abrir novamente. A configuração existente é preservada.
+
+## Configuração explícita (avançado)
+
+Para uma configuração externa escolhida por você:
 
 ```sh
 ravi workspace-hub init --config /caminho/privado/workspace.json --json
 ravi workspace-hub setup --config /caminho/privado/workspace.json --json
 ```
 
-O instalador completo pertence ao lifecycle do produto. A CLI Ravi verificada não
-expôs um comando oficial install/update. Para desenvolvimento a partir do checkout,
-execute o mesmo handler, sem instalar nada no estado vivo:
+O instalador do pacote cria a configuração padrão usada por `open`. A CLI Ravi não expõe um instalador oficial de Apps; usamos o lifecycle documentado em [INSTALLATION.md](INSTALLATION.md).
 
-```sh
-bun src/apps/workspace-hub/cli.mjs init --config /caminho/privado/workspace.json --json
-bun src/apps/workspace-hub/cli.mjs setup --config /caminho/privado/workspace.json --json
-```
-
-Use o endereço loopback impresso. O botão **Configurar fontes** no topo abre o
-diálogo de configuração, preservando Home, Trabalho, Agentes, Alerts e Connectors.
-O setup só está disponível no serviço local; o mesmo botão num HTML estático explica
-que a configuração deve ser aberta no Ravi local. O serviço não é acesso remoto,
-broker durável, autenticação humana ou rotina automática.
-
-1. Informe nome, fuso, janela de tarefas/reuniões e aparência inicial.
-2. Escolha fontes, agentes, conversas, projetos e tarefas do inventário visível.
-3. Confira a revisão. **Cancelar** não grava a configuração.
-4. **Salvar configuração** grava a seleção local; ainda não afirma acesso.
-5. **Consultar fontes** executa leituras reais e mostra o resultado de cada fonte.
-6. **Abrir Home** recarrega os dados da configuração. Personalize os widgets na Home.
+O setup funciona no serviço local, com os acessos do Ravi que o executa. Uma página estática explica que a configuração deve ser aberta no Ravi local. Não é autenticação remota nem rotina automática de atualização.
 
 O nome do agente pode vir do cadastro ou de um vínculo nativo de sessão. Um vínculo
 não comprova acesso ao perfil completo; a origem é exibida junto ao registro. A
@@ -122,8 +127,7 @@ Salvar exige revisão atual da configuração e inventário recente; uma janela 
 não sobrescreve outra. Lock, validação e rename atômico protegem os arquivos. Falha
 preserva os últimos registros e datas, com estado stale/unavailable. Lista vazia
 confirmada remove registros antigos daquele recorte. Um lock abandonado requer
-verificar ausência do processo antes de removê-lo. Lifecycle/backup/rollback
-completo e operação por usuário continuam em fases posteriores.
+verificar ausência do processo antes de removê-lo. Instalação, backup e rollback estão documentados em [INSTALLATION.md](INSTALLATION.md).
 
 Runtime App: leitura `use:app:workspace-hub`, mutação `execute:app:workspace-hub`,
 além da autoridade específica sobre as fontes consultadas. Manifesto não concede
