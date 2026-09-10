@@ -28,7 +28,7 @@ test('update and rollback preserve config, cached data and installation ID',()=>
  const before=readFileSync(p.config,'utf8');writeFileSync(join(p.data,'local-note.txt'),'local only',{mode:0o600});
  expect(lifecycle('update',{stateDir}).status).toBe('updated');expect(readFileSync(p.config,'utf8')).toBe(before);
  expect(lifecycle('rollback',{stateDir}).version).toBe('0.1.0-alpha.5');expect(readFileSync(p.config,'utf8')).toBe(before);expect(readFileSync(join(p.data,'local-note.txt'),'utf8')).toBe('local only');
- expect(lifecycle('update',{stateDir}).version).toBe('0.1.0-alpha.7');
+ expect(lifecycle('update',{stateDir}).version).toBe(JSON.parse(readFileSync(join(root,'package.json'))).version);
 });
 test('unknown config schema blocks update without losing the installed App',()=>{
  const p=install('schema');const c=JSON.parse(readFileSync(p.config));c.schema='workspace.config/v99';replace(p.config,c);

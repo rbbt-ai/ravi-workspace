@@ -177,5 +177,5 @@ dialog.widget-editor{inset:0;margin:auto;height:fit-content;max-height:calc(100d
 /* Missing sources occupy the full widget rather than the date column. */
 .home-widget>.widget-unavailable,.home-widget>.feed-empty{grid-column:1/-1;min-width:0}
 
-.setup-launch{width:auto!important;gap:7px;padding:0 12px!important;font-size:12px!important;white-space:nowrap}.setup-launch span:first-child{font-size:18px}
+.setup-launch{display:inline-flex;align-items:center;justify-content:center;width:auto!important;gap:7px;padding:0 12px!important;font-size:12px!important;white-space:nowrap}.setup-launch span:first-child{font-size:18px}
 @media(max-width:600px){.setup-launch span:last-child{display:none}.setup-launch{width:44px!important;padding:0!important}}

@@ -2,6 +2,8 @@ import {readFile,mkdir,writeFile,rename,unlink,stat} from 'node:fs/promises';
 import {dirname,resolve,join} from 'node:path';
 import {createHash,randomUUID} from 'node:crypto';
 import {validateConfig,browserConfig,readConfig} from './config.mjs';
+import {contextMap} from './context-engine.mjs';
+import {validateProjects} from './context-engine.mjs';
 import {projectSnapshot} from './snapshot.mjs';
 const ui=new URL('../ui/workspace/',import.meta.url);
 const read=name=>readFile(new URL(name,ui),'utf8');
@@ -14,10 +16,11 @@ async function asset(file,base,kind){
  if(kind==='logo'){if(b.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])))mime='image/png';else if(b[0]===255&&b[1]===216&&b[2]===255)mime='image/jpeg';else if(b.subarray(0,4).toString()==='RIFF'&&b.subarray(8,12).toString()==='WEBP')mime='image/webp';}
  if(!mime)throw Error('UNSUPPORTED_BRAND_ASSET');return `data:${mime};base64,${b.toString('base64')}`;
 }
-export async function renderWorkspace(rawConfig,rawSnapshot=null,assetBase=process.cwd()){
+export async function renderWorkspace(rawConfig,rawSnapshot=null,assetBase=process.cwd(),map=null){
  const config=validateConfig(rawConfig),data=projectSnapshot(rawSnapshot,config),safe=browserConfig(config);
+ if(map){validateProjects(map.projects,new Set(map.sources.map(s=>s.id)));data.contextMap=map;}
  const logo=config.brand.logoFile?await asset(config.brand.logoFile,assetBase,'logo'):'data:image/svg+xml;base64,'+Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect x="12" y="12" width="76" height="76" rx="24" fill="#846fff"/><path d="M32 67V33h18c17 0 20 23 3 25l16 9H55L42 56v11zm10-21h9c6 0 6-4 0-4h-9z" fill="white"/></svg>').toString('base64');
- let css=(await Promise.all(['themes.css','style.css','home.css','alerts.css','connectors.css','project-context.css','activity.css','refinement.css'].map(read))).join('\n');
+ let css=(await Promise.all(['themes.css','style.css','home.css','alerts.css','connectors.css','project-context.css','activity.css','refinement.css','context-map.css'].map(read))).join('\n');
  for(const [token,file]of [['__FONT_SANS__','montserrat-latin.woff2'],['__FONT_MONO__','geist-mono-latin.woff2']])css=css.replaceAll(token,(await readFile(new URL('fonts/'+file,ui))).toString('base64'));
  for(const [field,weight]of [['displayFontRegular',400],['displayFontBold',800]])if(config.brand[field])css+=`\n@font-face{font-family:'Workspace Display';src:url('${await asset(config.brand[field],assetBase,'font')}');font-weight:${weight};font-display:swap}`;
  if(config.brand.displayFontRegular)css+="\n:root{--font-display:'Workspace Display','Montserrat',sans-serif}";
@@ -35,7 +38,7 @@ export async function renderWorkspace(rawConfig,rawSnapshot=null,assetBase=proce
 export async function loadWorkspace(configFile,snapshotFile){
  const config=await readConfig(configFile);let snapshot=null;
  if(snapshotFile){const info=await stat(snapshotFile);if(info.size>10000000)throw Error('SNAPSHOT_TOO_LARGE');snapshot=JSON.parse(await readFile(snapshotFile,'utf8'));}
- return renderWorkspace(config,snapshot,dirname(resolve(configFile)));
+ return renderWorkspace(config,snapshot,dirname(resolve(configFile)),await contextMap(configFile));
 }
 export async function buildWorkspace(configFile,snapshotFile,out){
  const result=await loadWorkspace(configFile,snapshotFile),dir=resolve(out),target=join(dir,'index.html');

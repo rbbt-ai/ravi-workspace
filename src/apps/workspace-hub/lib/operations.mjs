@@ -1,3 +1,4 @@
+import {contextState,contextMap,contextTick} from './context-engine.mjs';
 import {readFile,writeFile,mkdtemp,rename,rm} from 'node:fs/promises';
 import {resolve,join,dirname,relative,basename} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -33,8 +34,10 @@ export async function prepareOperation(configFile,root,projectRef,{intervalMinut
   if(previous){if(!same({...previous,preparedAt:null},{...profile,preparedAt:null}))throw Error('OPERATION_REVIEW_REQUIRED');await loadOperation(dir,run);return {status:'existing',directory:dir,installationId:config.installationId};}
   for(const f of ['config.json','config.json.access.json','config.json.snapshot.json'])if(await privatePath(join(dir,f),{optional:true}))throw Error('STATE_COLLISION');
   const snapshot=await readSnapshot(configFile);projectSnapshot(snapshot,config);
+  const context=await contextState(configFile,{run});if(context.pending)throw Error('ANALYSIS_PENDING');
   await privateWrite(join(dir,'config.json'),config);
   if(snapshot)await privateWrite(join(dir,'config.json.snapshot.json'),snapshot);
+  if(context.binding)await privateWrite(join(dir,'config.json.context.json'),context);
   await privateWrite(join(dir,'config.json.access.json'),{schema:'workspace.access/v1',configFile:join(dir,'config.json'),identity});
   // Profile last: incomplete preparation cannot be used as a runnable operation.
   await privateWrite(join(dir,'operation.json'),profile);
@@ -110,7 +113,9 @@ export async function refreshOperation(directory,{publish=false,run=command,coll
    if(active.length&&!active.some(s=>result.results?.[s]?.status==='ready'))throw Error('NO_CONFIRMED_SOURCE');
    const snapshot=await privateRead(snapshotPath(input));projectSnapshot(snapshot,config);
    if(Date.parse(snapshot.capturedAt)<Date.now()-600000||Date.parse(snapshot.capturedAt)>Date.now()+60000)throw Error('STALE_COLLECTION');
-   const {html}=await renderWorkspace(config,snapshot,dirname(input));
+   const contextFile=join(dir,'config.json');
+   await contextTick(contextFile,{run});
+   const {html}=await renderWorkspace(config,snapshot,dirname(input),await contextMap(contextFile,{run}));
    await recheck(p,run);const reread=await readConfig(join(dir,'config.json'),{identityRunner:run});if(hash(reread)!==p.configHash)throw Error('CONFIG_CHANGED');
    const generation={hash:hash({installationId:p.installationId,project:p.project.id,snapshot,html}),htmlHash:hash(html),capturedAt:snapshot.capturedAt};
    const generations=await privateDirectory(join(dir,'generations')),target=join(generations,generation.hash);

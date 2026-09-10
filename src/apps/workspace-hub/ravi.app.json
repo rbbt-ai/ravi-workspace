@@ -2,8 +2,8 @@
   "schema": "ravi.app/v1",
   "id": "workspace-hub",
   "name": "Ravi Workspace",
-  "version": "0.1.0-alpha.7",
-  "description": "Workspace pessoal instalado no Ravi do usuário.",
+  "version": "0.1.0-alpha.8",
+  "description": "Workspace pessoal instalado no Ravi do usu\u00e1rio.",
   "interfaces": {
     "cli": {
       "command": "ravi workspace-hub",
@@ -123,6 +123,36 @@
       "command": "bun ./cli.mjs open --json {args}",
       "mutating": true,
       "permission": "workspace-hub:write"
+    },
+    "workspace-hub.context-status": {
+      "interface": "cli",
+      "command": "bun ./cli.mjs context-status --json {args}",
+      "mutating": false,
+      "permission": "workspace-hub:read"
+    },
+    "workspace-hub.context-collect": {
+      "interface": "cli",
+      "command": "bun ./cli.mjs context-collect --json {args}",
+      "mutating": true,
+      "permission": "workspace-hub:write"
+    },
+    "workspace-hub.context-packet": {
+      "interface": "cli",
+      "command": "bun ./cli.mjs context-packet --json {args}",
+      "mutating": false,
+      "permission": "workspace-hub:read"
+    },
+    "workspace-hub.context-apply": {
+      "interface": "cli",
+      "command": "bun ./cli.mjs context-apply --json {args}",
+      "mutating": true,
+      "permission": "workspace-hub:write"
+    },
+    "workspace-hub.context-analyze": {
+      "interface": "cli",
+      "command": "bun ./cli.mjs context-analyze --json {args}",
+      "mutating": true,
+      "permission": "workspace-hub:write"
     }
   },
   "permissions": {
@@ -149,6 +179,11 @@
       },
       {
         "path": "<operation-root>/<installation-id>",
+        "kind": "state",
+        "retention": "durable"
+      },
+      {
+        "path": "<config-file>.context.json",
         "kind": "state",
         "retention": "durable"
       }

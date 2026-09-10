@@ -1,3 +1,4 @@
+import {contextView,collectContext,packet,applyContext,requestAnalysis} from './lib/context-engine.mjs';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {initializeConfig} from './lib/config.mjs';
@@ -29,6 +30,13 @@ if(import.meta.main){
   const args=process.argv.slice(2),op=args.shift();
   try{
     if(op==='status'&&args.every(a=>a==='--json'))console.log(JSON.stringify(await packageStatus()));
+    else if(['context-status','context-collect','context-packet','context-apply','context-analyze'].includes(op)){
+      const options={};for(let i=0;i<args.length;i++){if(args[i]==='--json')continue;if(!['--config','--patch'].includes(args[i])||!args[i+1]||options[args[i]])throw Error('INVALID_ARGUMENT');options[args[i]]=args[++i];}
+      if(!options['--config'])throw Error('CONFIG_REQUIRED');
+      const file=options['--config'];
+      const result=op==='context-status'?await contextView(file):op==='context-collect'?await collectContext(file):op==='context-packet'?await packet(file):op==='context-analyze'?await requestAnalysis(file):await applyContext(file,JSON.parse(await readFile(options['--patch'],'utf8')));
+      console.log(JSON.stringify(result));
+    }
     else if(['prepare-operation','operation-status','refresh','schedule'].includes(op)){
       const allowed=op==='prepare-operation'?['--config','--root','--project','--interval']:['--operation',...(op==='refresh'?['--publish']:op==='schedule'?['--apply']:[])];
       const options={};for(let i=0;i<args.length;i++){const flag=args[i];if(flag==='--json')continue;if(!allowed.includes(flag)||options[flag]!==undefined)throw Error('INVALID_ARGUMENT');if(['--publish','--apply'].includes(flag))options[flag]=true;else{if(!args[i+1]||args[i+1].startsWith('--'))throw Error('INVALID_ARGUMENT');options[flag]=args[++i];}}

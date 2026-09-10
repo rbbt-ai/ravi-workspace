@@ -65,7 +65,7 @@
   }catch(e){if(dialog.open){shell('<h3>Seleção salva; consulta não concluída</h3><p>Você pode tentar carregar de novo. Os dados anteriores continuam preservados.</p>',button('discover','Rever seleção')+button('home','Voltar à Home')+button('collect','Tentar consulta novamente',true));status(errors[e.message]||'Peça ao seu Ravi para verificar o acesso e reabrir o Workspace.',true);}}
  }
  document.addEventListener('workspace-route-change',hint);hint();
- document.addEventListener('click',event=>{if(event.target.closest('[data-action="setup"]')){event.stopImmediatePropagation();open();}},true);
+ document.addEventListener('click',event=>{if(event.target.closest(boot.guided?'[data-action="setup-legacy"]':'[data-action="setup"]')){event.stopImmediatePropagation();open();}},true);
  dialog.addEventListener('close',()=>{generation++;try{sessionStorage.setItem(dismissKey,'1');}catch{}focus?.focus({preventScroll:true});});
  dialog.addEventListener('change',event=>{const el=event.target;if(el.dataset.selection){syncAgents(el);updateCounts();}if(el.id==='setup-google'||el.id==='setup-tldv'){const source=el.id==='setup-google'?'agenda':'meetings';dialog.querySelector(`[data-selection="sources"][value="${source}"]`).checked=el.value!=='off';}});
  dialog.addEventListener('click',async event=>{
@@ -88,5 +88,5 @@
   }catch(e){if(dialog.open)status(errors[e.message]||'Operação não concluída. Confira a seleção; a última versão válida foi preservada.',true);}
   finally{busy=false;control.disabled=false;}
  });
- if(location.hash==='#/setup')open();else if(boot.firstRun){let dismissed=false;try{dismissed=sessionStorage.getItem(dismissKey)==='1';}catch{}if(!dismissed)welcome();}
+ if(!boot.guided&&location.hash==='#/setup')open();else if(!boot.guided&&boot.firstRun){let dismissed=false;try{dismissed=sessionStorage.getItem(dismissKey)==='1';}catch{}if(!dismissed)welcome();}
 })();

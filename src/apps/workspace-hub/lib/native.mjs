@@ -8,7 +8,13 @@ const text=(v,n=1600)=>{
 export function command(args,{json=true,timeout=25000}={}){
  return new Promise((resolve,reject)=>execFile('ravi',args,{timeout,maxBuffer:2500000},(error,stdout)=>{
   if(error)return reject(Error('SOURCE_UNAVAILABLE'));
-  try{resolve(json?JSON.parse(stdout):stdout);}catch{reject(Error('SOURCE_CONTRACT_CHANGED'));}
+  try{resolve(json?JSON.parse(stdout):stdout);}catch{
+   const readonly=[['sessions','read'],['artifacts','show'],['artifacts','list']].some(a=>a[0]===args[0]&&a[1]===args[1]);
+   if(!readonly||stdout.length<64000||!stdout.trimStart().startsWith('{'))return reject(Error('SOURCE_CONTRACT_CHANGED'));
+   execFile('python3',[new URL('./read-cli-tty.py',import.meta.url).pathname,...args],{timeout:30000,maxBuffer:4500000},(error,complete)=>{
+    if(error)return reject(Error('SOURCE_CONTRACT_CHANGED'));try{resolve(JSON.parse(complete));}catch{reject(Error('SOURCE_CONTRACT_CHANGED'));}
+   });
+  }
  }));
 }
 export async function nativeRows(kind,days,run=command){

@@ -4,7 +4,7 @@ Seu Workspace no seu Ravi: Home com widgets, Trabalho, Agentes, Alerts e Connect
 
 ## Instalar
 
-Requer Ravi instalado e Bun 1.3.14 ou superior. No seu computador:
+Requer Ravi instalado e Bun 1.3.14 ou superior. Python 3/POSIX é usado para ler respostas grandes nas versões da CLI afetadas pelo corte de JSON. No seu computador:
 
 ```sh
 git clone https://github.com/rbbt-ai/ravi-workspace.git
@@ -17,14 +17,15 @@ Também funciona a partir do pacote `.tar.gz` da [versão disponível](https://g
 Depois, peça ao **seu Ravi**: **“Abra meu Workspace com `ravi workspace-hub open`.”**
 Abra o endereço local informado (por padrão http://127.0.0.1:4318). No primeiro acesso, o Workspace guia você:
 
-1. **Escolher meus dados** consulta os registros disponíveis no seu Ravi.
-2. Ajuste os agentes, conversas, projetos e tarefas e clique em **Revisar seleção**.
-3. **Salvar e carregar Home** consulta as fontes e mostra o resultado de cada uma.
-4. **Abrir minha Home** mostra os dados carregados. Personalize os widgets quando quiser.
+1. Confira seu login e a organização no Console.
+2. Escolha artifacts/Pages, projetos, conversas, Tasks e Gmail opcional.
+3. Defina o recorte e peça a análise ao seu Ravi.
+4. Revise o mapa: unir, separar, excluir e corrigir cliente/objetivo.
+5. Abra a Home com seus projetos e ações.
 
-Se optar por explorar primeiro, **Escolher meus dados** continua em destaque na Home. **Configurar fontes** no topo permite voltar à seleção depois. Google Calendar, tl;dv e pipeline são opcionais; você não precisa deles para começar. Se uma fonte estiver indisponível, a tela explica o próximo passo e permite tentar novamente.
-
-Já instalou a alpha.6 e abriu uma Home vazia? Atualize abaixo para receber a orientação inicial. [Guia das fontes e solução de problemas](docs/ONBOARDING.md).
+**Configurar fontes** reabre o guia. Pipeline, WhatsApp e Gmail são opcionais.
+Google Calendar e tl;dv continuam disponíveis no configurador de widgets.
+[Guia do primeiro acesso](docs/ONBOARDING.md) · [Motor de contexto e limites](docs/CONTEXT-ENGINE.md).
 
 ## Atualizar ou voltar
 
@@ -47,9 +48,11 @@ bun run rollback:workspace
 
 ## Alcance desta versão
 
-Versão **0.1.0-alpha.7**, prévia com repositório público. A licença do produto não foi convertida em licença open source. Instalação e recuperação são do pacote, sem editar o núcleo Ravi, conceder permissões ou copiar credenciais. O diretório padrão segue o estado já configurado do Ravi, normalmente `~/.ravi`.
+Versão **0.1.0-alpha.8**, prévia com repositório público. A licença do produto não foi convertida em licença open source. Instalação e recuperação são do pacote, sem editar o núcleo Ravi, conceder permissões ou copiar credenciais. O diretório padrão segue o estado já configurado do Ravi, normalmente `~/.ravi`.
 
 A Home local usa o ambiente de cada pessoa. Permissões e integrações existentes são respeitadas. O navegador remoto não executa comandos do computador: acesso remoto privado e atualização periódica são opcionais, descritos em [OPERATIONS.md](docs/OPERATIONS.md).
+
+O fluxo de login e a leitura Gmail usam os contratos nativos. Consentimento real do Gmail e execução completa da análise por outro agente ainda não foram certificados nesta versão.
 
 Instalação, atualização, rollback e HTTP foram testados localmente em diretórios separados. Uso em outros computadores, login cruzado, cron de terceiros e iPhone físico ainda não foram certificados; não são pré-condições para compartilhar esta prévia.
 

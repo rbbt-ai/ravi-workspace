@@ -56,7 +56,7 @@ test('first access guides empty installations; configured data is not treated as
  const {file,config}=await installation();const server=await startSetup(file,{inventoryLoader:async()=>inventory()});
  const bootstrap=async()=>{const html=await (await fetch('http://127.0.0.1:'+server.port)).text();return JSON.parse(html.match(/window.workspaceSetupBootstrap=(\{[^;]+\});/)[1]);};
  try{
-  expect(await bootstrap()).toEqual({installationId:config.installationId,firstRun:true,needsCollection:false});
+  expect(await bootstrap()).toEqual({installationId:config.installationId,guided:true,firstRun:true,needsCollection:false});
   await saveSetup(file,input(config),inventory());
   expect((await bootstrap()).firstRun).toBe(false);expect((await bootstrap()).needsCollection).toBe(true);
   await collect(file,{inventoryLoader:async()=>inventory()});expect((await bootstrap()).needsCollection).toBe(false);
