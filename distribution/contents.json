@@ -31,6 +31,7 @@
     "src/apps/workspace-hub/lib/presentation.mjs",
     "src/apps/workspace-hub/lib/providers.mjs",
     "src/apps/workspace-hub/lib/read-cli-tty.py",
+    "src/apps/workspace-hub/lib/sdk-operations.mjs",
     "src/apps/workspace-hub/lib/sdk.mjs",
     "src/apps/workspace-hub/lib/setup-server.mjs",
     "src/apps/workspace-hub/lib/setup.mjs",
@@ -78,6 +79,7 @@
     "tests/context.test.mjs",
     "tests/lifecycle.test.mjs",
     "tests/operations.test.mjs",
+    "tests/sdk-context.test.mjs",
     "tests/sdk.test.mjs",
     "tests/setup.test.mjs",
     "tests/test_distribution.py"

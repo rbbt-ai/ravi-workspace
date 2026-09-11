@@ -37,13 +37,31 @@ export async function nativeRows(kind,days,run=command){
  }
  throw Error('INVENTORY_LIMIT');
 }
-// The installed CLI truncates session JSON even at limit 1. This bounded metadata
-// table contract is also used by the existing runtime observer. Never read history.
+// SDK returns structured metadata; the existing table contract remains only for
+// local operator/explicitly absent SDK route. Never infer execution from recency.
 export async function sessionRows(run=command){
  let offset=0,total;const rows=[],seen=new Set();
- for(let page=0;page<20;page++){
-  const raw=await run(['sessions','list','--limit','100','--offset',String(offset)],{json:false});
-  const header=raw.match(/All sessions \((\d+) returned of (\d+), limit 100, offset (\d+)\)/);
+ for(let page=0;page<200;page++){
+  const raw=await run(['sessions','list','--limit','10','--offset',String(offset)],{json:false,sessionMetadata:true});
+  if(raw&&typeof raw==='object'){
+   const items=raw.items,p=raw.pagination;
+   if(!Array.isArray(items)||!p||!Number.isSafeInteger(p.total)||p.total<0||p.offset!==offset||p.returned!==items.length||typeof p.hasMore!=='boolean')throw Error('SESSION_METADATA_CONTRACT_CHANGED');
+   total??=p.total;if(total!==p.total)throw Error('UNSTABLE_INVENTORY');
+   for(const item of items){
+    const id=item.name||item.sessionKey;
+    if(!identifier(id)||!identifier(item.agentId)||typeof item.ephemeral!=='boolean'||seen.has(id))throw Error('INVALID_SESSION_METADATA');
+    seen.add(id);if(item.ephemeral||/^(eval|cron|task-)/i.test(id))continue;
+    const label=item.displayName||item.lastTo||id;
+    rows.push({id,name:/\d{8,}/.test(label)?'Conversa privada':text(label,120),agent:item.agentId,channel:'Ravi',activityLabel:'',source:'Ravi · metadados de sessões'});
+   }
+   if(seen.size>2000)throw Error('INVENTORY_LIMIT');
+   offset+=items.length;
+   if(!p.hasMore){if(offset!==total)throw Error('INCOMPLETE_INVENTORY');return rows;}
+   if(!items.length||offset>=total||p.nextOffset!==offset)throw Error('INCOMPLETE_INVENTORY');
+   continue;
+  }
+  if(typeof raw!=='string')throw Error('SESSION_METADATA_CONTRACT_CHANGED');
+  const header=raw.match(/All sessions \((\d+) returned of (\d+), limit 10, offset (\d+)\)/);
   if(!header)throw Error('SESSION_METADATA_CONTRACT_CHANGED');
   const [count,current,currentOffset]=header.slice(1).map(Number);total??=current;
   if(total!==current||currentOffset!==offset)throw Error('UNSTABLE_INVENTORY');
@@ -59,6 +77,7 @@ export async function sessionRows(run=command){
    const label=display&&display!=='-'?display:m[1];
    rows.push({id:m[1],name:/\d{8,}/.test(label)?'Conversa privada':text(label,120),agent:m[2],channel:'Ravi',activityLabel:text(m[3],80),source:'Ravi · metadados de sessões'});
   }
+  if(seen.size>2000)throw Error('INVENTORY_LIMIT');
   offset+=count;if(offset===total)return rows;
   if(!count||offset>total)throw Error('INCOMPLETE_INVENTORY');
  }

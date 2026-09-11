@@ -1,5 +1,6 @@
 // Server-only adapter. The vendored modules are unmodified official SDK output.
 import {createInheritedClient,resolveInheritedBaseUrl} from '../vendor/ravi-sdk/inherit.js';
+import {operations,parseRead,validateRead} from './sdk-operations.mjs';
 export const SDK_PACKAGE_VERSION='0.260725.1';
 const object=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const codes=new Set(['SDK_AUTH_UNAVAILABLE','AUTH_EXPIRED','ACCESS_DENIED','SDK_OPERATION_UNAVAILABLE','SDK_TIMEOUT','SDK_RESPONSE_LIMIT','SOURCE_CONTRACT_CHANGED','SOURCE_UNAVAILABLE','INVALID_NATIVE_ARGUMENT']);
@@ -74,31 +75,22 @@ export async function createSdkReader({fetchImpl=globalThis.fetch,timeoutMs=2500
  }
  return {
   async supports(name){return (await catalog()).names.has(name);},
-  async list(kind,options){
-   if(!['projects','tasks','agents'].includes(kind))throw Error('INVALID_NATIVE_ARGUMENT');
-   if(!await this.supports(kind+'.list'))throw Error('SDK_OPERATION_UNAVAILABLE');
+  async read(name,positional=[],options={}){
+   if(!Object.hasOwn(operations,name))throw Error('INVALID_NATIVE_ARGUMENT');
+   if(!await this.supports(name))throw Error('SDK_OPERATION_UNAVAILABLE');
    try{
-    const raw=await inherited.client[kind].list(options);
-    if(!object(raw)||raw.error||raw.success===false||!Array.isArray(raw.items))throw Error('SOURCE_CONTRACT_CHANGED');
-    return raw;
+    const segments=name.split('.'),method=segments.pop();let group=inherited.client;
+    for(const segment of segments)group=group?.[segment];
+    if(typeof group?.[method]!=='function')throw Error('SDK_OPERATION_UNAVAILABLE');
+    return validateRead(name,await group[method](...positional,options),positional);
    }catch(e){throw safeSdkError(e);}
   },
+  async list(kind,options){return this.read(kind+'.list',[],options);},
   async diagnostics(){
    const c=await catalog();
-   return {schema:'workspace.sdk/v1',mode:'sdk',sdkPackageVersion:SDK_PACKAGE_VERSION,registryHash:c.registryHash,commandCount:c.commandCount,operations:Object.fromEntries(['projects.list','tasks.list','agents.list','channels.backend.ingress','channels.backend.readback','channels.backend.interrupt'].map(n=>[n,c.names.has(n)])),identity:'inherited-runtime',sourceAccessVerified:false};
+   return {schema:'workspace.sdk/v1',mode:'sdk',sdkPackageVersion:SDK_PACKAGE_VERSION,registryHash:c.registryHash,commandCount:c.commandCount,operations:Object.fromEntries([...Object.keys(operations),'channels.backend.ingress','channels.backend.readback','channels.backend.interrupt'].map(n=>[n,c.names.has(n)])),identity:'inherited-runtime',sourceAccessVerified:false};
   }
  };
-}
-const flags={projects:{limit:'number',offset:'number'},agents:{limit:'number',offset:'number'},tasks:{since:'string',until:'string',limit:'number',last:'string',sort:'string',order:'string',cursor:'string'}};
-function parseList(args){
- const options={};
- for(let i=2;i<args.length;i++){
-  const flag=args[i];if(flag==='--json')continue;
-  const name=flag.slice(2),type=flags[args[0]][name],value=args[++i];
-  if(!flag.startsWith('--')||!type||value===undefined||options[name]!==undefined)throw Error('INVALID_NATIVE_ARGUMENT');
-  if(type==='number'){if(!/^\d+$/.test(value)||!Number.isSafeInteger(Number(value)))throw Error('INVALID_NATIVE_ARGUMENT');options[name]=value;}else options[name]=value;
- }
- return options;
 }
 // CLI is retained for unmigrated commands, an explicitly absent catalog route,
 // or the existing local operator mode without a runtime key. A failed SDK call
@@ -108,12 +100,13 @@ export function createNativeCommand({cli,sdkFactory=createSdkReader,hasRuntime=(
  const reader=()=>readerPromise??=(sdkFactory().catch(e=>{readerPromise=null;throw safeSdkError(e);}));
  const viaCli=async(args,options)=>{const started=performance.now();try{return await cli(args,options);}finally{try{onMetric({transport:'cli',operation:args.slice(0,2).join('.'),durationMs:Math.round(performance.now()-started)});}catch{}}};
  const command=async(args,options={})=>{
-  if(options.json===false||!flags[args[0]]||args[1]!=='list')return viaCli(args,options);
-  const parsed=parseList(args);
+  const metadata=options.sessionMetadata===true&&args[0]==='sessions'&&args[1]==='list';
+  if(options.json===false&&!metadata)return viaCli(args,options);
+  const parsed=parseRead(args);if(!parsed)return viaCli(args,options);
   if(!hasRuntime())return viaCli(args,options);
   const sdk=await reader();
-  if(!await sdk.supports(args[0]+'.list'))return viaCli(args,options);
-  return sdk.list(args[0],parsed);
+  if(!await sdk.supports(parsed.name))return viaCli(args,options);
+  return sdk.read(parsed.name,parsed.positional,parsed.options);
  };
  command.diagnostics=async()=>hasRuntime()?(await reader()).diagnostics():{schema:'workspace.sdk/v1',mode:'cli-local-operator',sdkPackageVersion:SDK_PACKAGE_VERSION,reason:'NO_INHERITED_RUNTIME',sourceAccessVerified:false};
  return command;

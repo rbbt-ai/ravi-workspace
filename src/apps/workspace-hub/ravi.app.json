@@ -2,8 +2,8 @@
   "schema": "ravi.app/v1",
   "id": "workspace-hub",
   "name": "Ravi Workspace",
-  "version": "0.1.0-alpha.9.sdk.1",
-  "description": "Workspace pessoal instalado no Ravi do usu\u00e1rio.",
+  "version": "0.1.0-alpha.9.sdk.2",
+  "description": "Workspace pessoal instalado no Ravi do usuário.",
   "interfaces": {
     "cli": {
       "command": "ravi workspace-hub",

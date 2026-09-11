@@ -1,9 +1,9 @@
 {
   "name": "ravi-workspace",
-  "version": "0.1.0-alpha.9.sdk.1",
+  "version": "0.1.0-alpha.9.sdk.2",
   "private": true,
   "type": "module",
-  "description": "Workspace instal\u00e1vel para usu\u00e1rios do Ravi.",
+  "description": "Workspace instalável para usuários do Ravi.",
   "engines": {
     "bun": ">=1.3.14"
   },

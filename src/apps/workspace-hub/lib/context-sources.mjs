@@ -18,7 +18,7 @@ export async function pages(args,run=command){
   if(!p||!Array.isArray(items)||p.offset!==offset||p.returned!==items.length||!Number.isInteger(p.total)||p.total<0)throw Error('INCOMPLETE_CATALOG');
   total??=p.total;if(total!==p.total)throw Error('UNSTABLE_INVENTORY');
   for(const x of items){if(typeof x.id!=='string'||ids.has(x.id))throw Error('INCOMPLETE_CATALOG');ids.add(x.id);out.push(x);}
-  offset+=items.length;if(offset===total)return out;
+  offset+=items.length;if(offset===total){if(p.hasMore===true)throw Error('INCOMPLETE_CATALOG');return out;}
   if(!items.length||offset>total||p.hasMore===false)throw Error('INCOMPLETE_CATALOG');
  }
  throw Error('INVENTORY_LIMIT');
@@ -74,34 +74,40 @@ export async function artifactEvidence(id,run=command){
 }
 export async function gmailEvidence(binding,days,run=command){
  if(!binding.connectorId)return [];
+ const verify=async()=>{
  const r=await run(['connectors','show',binding.connectorId,'--json']),c=r.connection;
  if(!c||c.id!==binding.connectorId||c.status!=='active'||c.requiresReauth)throw Error('GMAIL_CONNECTION_UNAVAILABLE');
  if(c.externalAccountLogin?.toLowerCase()!==binding.account.toLowerCase())throw Error('GMAIL_ACCOUNT_MISMATCH');
  if(!c.capabilities?.includes('gmail.message.read')||!c.capabilities?.includes('gmail.message.list'))throw Error('GMAIL_READ_SCOPE_REQUIRED');
- const result=[],seen=new Set(),since=Math.floor((Date.now()-days*86400000)/1000);let cursor=null;
+ };await verify();
+ const through=Date.now(),result=[],seen=new Map(),cursors=new Set(),since=Math.floor((through-days*86400000)/1000);let cursor=null;
  for(let page=0;page<4;page++){
   const raw=await run(['gmail','list','--connector',binding.connectorId,'--max','20','--q',`after:${since} -in:trash -in:spam ${binding.query||''}`,...(binding.labels.length?['--label',binding.labels.join(',')]:[]),...(cursor?['--cursor',cursor]:[]),'--json']);
   const list=raw.result;if(!list||!Array.isArray(list.messages??[]))throw Error('SOURCE_CONTRACT_CHANGED');
-  for(const m of list.messages||[]){if(seen.has(m.id))continue;seen.add(m.id);
+  for(const m of list.messages||[]){
+   if(!m||typeof m.id!=='string'||!m.id||typeof m.threadId!=='string'||!m.threadId)throw Error('SOURCE_CONTRACT_CHANGED');
+   if(seen.has(m.id)){if(seen.get(m.id)!==m.threadId)throw Error('SOURCE_CONTRACT_CHANGED');continue;}seen.set(m.id,m.threadId);
    const {result:v}=await run(['gmail','read',m.id,'--connector',binding.connectorId,'--format','full','--json']);
-   if(!v||v.id!==m.id)throw Error('SOURCE_CONTRACT_CHANGED');
-   const at=date(Number(v.internalDate)||v.headers?.date);if(!at||Date.parse(at)<since*1000)continue;
+   if(!v||v.id!==m.id||(v.threadId!==undefined&&v.threadId!==m.threadId))throw Error('SOURCE_CONTRACT_CHANGED');
+   const at=date(Number(v.internalDate)||v.headers?.date);if(!at||Date.parse(at)<since*1000||Date.parse(at)>through)continue;
    result.push(row('gmail',binding.connectorId+':'+m.id,v.headers?.subject,{thread:clean(m.threadId,160),sourceAt:at,text:excerpt(v.body?.text||v.snippet||''),level:'content-sample',limitation:'Trecho do e-mail; anexos não lidos. Mensagens não são marcadas como lidas.',url:'https://mail.google.com/mail/u/'+encodeURIComponent(binding.account)+'/#all/'+encodeURIComponent(m.threadId)}));
   }
-  if(!list.nextPageToken)return {items:result,complete:true};
-  if(cursor===list.nextPageToken)throw Error('INCOMPLETE_CATALOG');cursor=list.nextPageToken;
+  if(!list.nextPageToken){await verify();return {items:result,complete:true};}
+  if(typeof list.nextPageToken!=='string'||cursors.has(list.nextPageToken))throw Error('INCOMPLETE_CATALOG');cursors.add(list.nextPageToken);cursor=list.nextPageToken;
  }
- return {items:result,complete:false};
+ await verify();return {items:result,complete:false};
 }
 export async function conversationEvidence(id,days,run=command){
  const raw=await run(['sessions','read',id,'--workspace','-n','30','--json']);
  const list=raw.messages??raw.history?.messages;
  if(!Array.isArray(list))throw Error('SESSION_CONTENT_UNAVAILABLE');
- const since=Date.now()-days*86400000;
+ const through=Date.now(),since=through-days*86400000,seen=new Map();
  return list.flatMap(m=>{
   const at=date(m.timestamp??m.createdAt??m.at),text=typeof m.content==='string'?m.content:typeof m.text==='string'?m.text:'';
-  if(!at||Date.parse(at)<since||!text||/^\[Cron:|^\[System\]/.test(text))return [];
-  return [row('message',id+':'+(m.id||hash([at,text]).slice(0,24)),clean(raw.session?.displayName||raw.session?.name||id,120),{sourceAt:at,text:excerpt(text.replace(/^\[session surfaces\].*(?:\n|$)/gm,'').replace(/\[WhatsApp [^\]]*\]\s*[^:\n]{1,100}:/g,'')),role:m.role==='user'?'request':'report',level:'content-sample',sessionId:id,limitation:'Amostra de até 30 mensagens normalizadas, filtrada pela janela selecionada.'})];
+  if(!at||Date.parse(at)<since||Date.parse(at)>through||!text||/^\[Cron:|^\[System\]/.test(text))return [];
+  const sourceId=id+':'+(m.id||hash([at,text]).slice(0,24)),fingerprint=hash([at,text,m.role]);
+  if(seen.has(sourceId)){if(seen.get(sourceId)!==fingerprint)throw Error('CONFLICTING_MESSAGE');return [];}seen.set(sourceId,fingerprint);
+  return [row('message',sourceId,clean(raw.session?.displayName||raw.session?.name||id,120),{sourceAt:at,text:excerpt(text.replace(/^\[session surfaces\].*(?:\n|$)/gm,'').replace(/\[WhatsApp [^\]]*\]\s*[^:\n]{1,100}:/g,'')),role:m.role==='user'?'request':'report',level:'content-sample',sessionId:id,limitation:'Amostra de até 30 mensagens normalizadas, filtrada pela janela selecionada.'})];
  });
 }
 
