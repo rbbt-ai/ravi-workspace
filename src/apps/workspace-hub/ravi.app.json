@@ -2,7 +2,7 @@
   "schema": "ravi.app/v1",
   "id": "workspace-hub",
   "name": "Ravi Workspace",
-  "version": "0.1.0-alpha.8",
+  "version": "0.1.0-alpha.9.sdk.1",
   "description": "Workspace pessoal instalado no Ravi do usu\u00e1rio.",
   "interfaces": {
     "cli": {
@@ -153,6 +153,12 @@
       "command": "bun ./cli.mjs context-analyze --json {args}",
       "mutating": true,
       "permission": "workspace-hub:write"
+    },
+    "workspace-hub.sdk-status": {
+      "interface": "cli",
+      "command": "bun ./cli.mjs sdk-status --json {args}",
+      "mutating": false,
+      "permission": "workspace-hub:read"
     }
   },
   "permissions": {

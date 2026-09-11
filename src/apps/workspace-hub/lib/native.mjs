@@ -1,11 +1,12 @@
 import {execFile} from 'node:child_process';
+import {createNativeCommand} from './sdk.mjs';
 const identifier=v=>typeof v==='string'&&/^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,159}$/.test(v);
 const text=(v,n=1600)=>{
  if(typeof v!=='string')return '';
  if(/(?:rctx_|gh[pousr]_|github_pat_|sk-)[A-Za-z0-9_-]{16,}|-----BEGIN [A-Z ]*PRIVATE KEY-----/.test(v))throw Error('SENSITIVE_SOURCE_CONTENT');
  return v.slice(0,n);
 };
-export function command(args,{json=true,timeout=25000}={}){
+export function cliCommand(args,{json=true,timeout=25000}={}){
  return new Promise((resolve,reject)=>execFile('ravi',args,{timeout,maxBuffer:2500000},(error,stdout)=>{
   if(error)return reject(Error('SOURCE_UNAVAILABLE'));
   try{resolve(json?JSON.parse(stdout):stdout);}catch{
@@ -17,6 +18,8 @@ export function command(args,{json=true,timeout=25000}={}){
   }
  }));
 }
+export const command=createNativeCommand({cli:cliCommand});
+export const sdkDiagnostics=()=>command.diagnostics();
 export async function nativeRows(kind,days,run=command){
  const rows=[],seen=new Set(),started=new Date(),since=new Date(started.getTime()-days*86400000).toISOString();
  let offset=0,cursor,total;
@@ -27,7 +30,7 @@ export async function nativeRows(kind,days,run=command){
   if(kind!=='tasks'){total??=p.total;if(total!==p.total||p.offset!==offset||p.returned!==items.length)throw Error('UNSTABLE_INVENTORY');}
   for(const row of items){if(!identifier(row.id)||seen.has(row.id))throw Error('INVALID_NATIVE_ID');seen.add(row.id);rows.push(row);}
   if(rows.length>2000)throw Error('INVENTORY_LIMIT');
-  if(!p.hasMore)return rows;
+  if(!p.hasMore){if(kind!=='tasks'&&rows.length!==total)throw Error('INCOMPLETE_INVENTORY');return rows;}
   if(!items.length)throw Error('INCOMPLETE_INVENTORY');
   if(kind==='tasks'){if(!p.nextCursor||p.nextCursor===cursor)throw Error('INCOMPLETE_INVENTORY');cursor=p.nextCursor;}
   else{if(p.nextOffset!==offset+items.length)throw Error('INCOMPLETE_INVENTORY');offset=p.nextOffset;}

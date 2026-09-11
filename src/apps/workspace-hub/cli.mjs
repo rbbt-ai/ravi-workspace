@@ -4,7 +4,7 @@ import {createHash} from 'node:crypto';
 import {initializeConfig} from './lib/config.mjs';
 import {buildWorkspace,loadWorkspace} from './lib/build.mjs';
 import {readConfig} from './lib/config.mjs';
-import {discover} from './lib/native.mjs';
+import {discover,sdkDiagnostics} from './lib/native.mjs';
 import {collect,readSnapshot,setupView} from './lib/setup.mjs';
 import {startSetup} from './lib/setup-server.mjs';
 import {prepareOperation,operationStatus,refreshOperation,scheduleOperation} from './lib/operations.mjs';
@@ -30,6 +30,7 @@ if(import.meta.main){
   const args=process.argv.slice(2),op=args.shift();
   try{
     if(op==='status'&&args.every(a=>a==='--json'))console.log(JSON.stringify(await packageStatus()));
+    else if(op==='sdk-status'&&args.every(a=>a==='--json'))console.log(JSON.stringify(await sdkDiagnostics()));
     else if(['context-status','context-collect','context-packet','context-apply','context-analyze'].includes(op)){
       const options={};for(let i=0;i<args.length;i++){if(args[i]==='--json')continue;if(!['--config','--patch'].includes(args[i])||!args[i+1]||options[args[i]])throw Error('INVALID_ARGUMENT');options[args[i]]=args[++i];}
       if(!options['--config'])throw Error('CONFIG_REQUIRED');

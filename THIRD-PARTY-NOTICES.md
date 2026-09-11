@@ -16,3 +16,7 @@ this distribution; its owner must hold the necessary rights for that use.
 The distribution tool uses the Python standard library. The application uses Bun
 and its Node-compatible standard modules. Those runtimes are prerequisites and
 are not redistributed in this archive.
+
+## Ravi SDK
+
+@ravi-os/sdk 0.260725.1, publisher-declared MIT. Five unmodified runtime modules included only in the backend. Source, integrity and preserved notices: `src/apps/workspace-hub/vendor/ravi-sdk/NOTICE.md`. Published archive contains no separate copyright/license file.

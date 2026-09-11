@@ -62,3 +62,7 @@ Instalação, atualização, rollback e HTTP foram testados localmente em diret�
 - [Build e verificação do pacote](docs/DISTRIBUTION.md)
 
 Testes: `bun test tests` e `python3 -B -m unittest discover -s tests -p 'test_*.py'`.
+
+### SDK backend (development increment)
+
+Projects, Tasks and agent lists use the pinned SDK when the inherited gateway exposes their contracts. `ravi workspace-hub sdk-status` diagnoses compatibility. See [SDK behavior and rollback](docs/SDK.md). This branch does not upgrade Ravi or activate the chat.
