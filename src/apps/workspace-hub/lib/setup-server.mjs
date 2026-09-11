@@ -8,8 +8,43 @@ import {renderWorkspace} from './build.mjs';
 import {discover} from './native.mjs';
 import {dirname,resolve} from 'node:path';
 import {readSnapshot,setupView,saveSetup,collect,importSnapshot} from './setup.mjs';
-export async function startSetup(configFile,{port=0,inventoryLoader=discover,collectOptions={},contextRun=command,contextCatalogLoader=catalog}={}){
+import {hash} from './context-sources.mjs';
+import {projectSnapshot} from './snapshot.mjs';
+import {createEventStream} from './sdk-events.mjs';
+import {createUpdates,updatePlan} from './updates.mjs';
+export async function startSetup(configFile,{port=0,inventoryLoader=discover,collectOptions={},contextRun=command,contextCatalogLoader=catalog,eventOpen,updateOptions={}}={}){
  await readConfig(configFile);const nonce=randomBytes(32).toString('hex');let inventory=null,contextInventory=null,busy=false,connectionJob=null;
+ let updates=null,scope=null,stopped=false,polling=false;
+ const scopeHash=(config,state)=>hash([config,state.binding,state.completed]);
+ const stopUpdates=()=>{updates?.stop();updates=null;scope=null;};
+ async function updateView(payload){
+  if(polling)return {status:{status:'refreshing'}};polling=true;
+  try{
+   const state=await verifyContextAccount(configFile,contextRun),config=await readConfig(configFile),current=scopeHash(config,state);
+   if(scope!==current){
+    stopUpdates();scope=current;
+    let open=eventOpen;
+    if(!open)try{open=createEventStream();}catch{open=async function*(){throw Error('SDK_AUTH_UNAVAILABLE');};}
+    const plan=updatePlan(config,state.binding,state.completed);
+    const verify=async()=>{const next=await verifyContextAccount(configFile,contextRun);if(stopped||scopeHash(await readConfig(configFile),next)!==current)throw Error('CONFIG_CHANGED');};
+    updates=createUpdates({...updateOptions,plan,open,async refresh(keys){
+     if(busy)throw Error('SETUP_BUSY');await verify();
+     const feeds=keys.filter(k=>k.startsWith('feed:')).map(k=>k.slice(5));
+     let error=null;
+     if(feeds.length){const r=await collect(configFile,{inventoryLoader,...collectOptions,sources:feeds,verify});if(Object.values(r.results).some(v=>v.error))error='SOURCE_UNAVAILABLE';}
+     const kinds=keys.filter(k=>k.startsWith('context:')).map(k=>k.slice(8));
+     if(kinds.length){const r=await contextTick(configFile,{run:contextRun,kinds,force:true,verify});if(r.status==='source_error')error='SOURCE_UNAVAILABLE';}
+     await verify();return {error};
+    }});
+   }
+   const snapshot=await readSnapshot(configFile),data=projectSnapshot(snapshot,config),map=await contextMap(configFile,{run:contextRun});
+   if(map)data.contextMap=map;
+   await verifyContextAccount(configFile,contextRun);
+   if(current!==scopeHash(await readConfig(configFile),await contextView(configFile)))throw Error('CONFIG_CHANGED');
+   const revision=hash([current,data]);
+   return {status:updates.status(),revision,...(revision!==payload.revision?{data,installationId:config.installationId}:{})};
+  }catch(e){stopUpdates();throw e;}finally{polling=false;}
+ }
  const headers={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','X-Frame-Options':'DENY'};
  const json=(body,status=200)=>Response.json(body,{status,headers});
  const server=Bun.serve({hostname:'127.0.0.1',port,maxRequestBodySize:1000000,async fetch(request){
@@ -21,14 +56,15 @@ export async function startSetup(configFile,{port=0,inventoryLoader=discover,col
     const context=await contextView(configFile);
     const config=await readConfig(configFile),snapshot=authorized?await readSnapshot(configFile):null,rendered=await renderWorkspace(config,snapshot,dirname(resolve(configFile)),authorized?await contextMap(configFile):null);
     const ui=new URL('../ui/workspace/',import.meta.url),css=await readFile(new URL('setup.css',ui),'utf8'),script=await readFile(new URL('setup.js',ui),'utf8');
-    const guideCSS=await readFile(new URL('guide.css',ui),'utf8'),guideJS=await readFile(new URL('guide.js',ui),'utf8');
+    const guideCSS=await readFile(new URL('guide.css',ui),'utf8'),guideJS=await readFile(new URL('guide.js',ui),'utf8'),updatesJS=await readFile(new URL('updates.js',ui),'utf8');
     const bootstrap={installationId:config.installationId,guided:true,firstRun:!authorized||(config.sources.length===0&&!context.completed),needsCollection:config.sources.length>0&&!snapshot};
-    const html=rendered.html.replace("connect-src 'none'","connect-src 'self'").replace('</head>',`<style>${css}\n${guideCSS}</style></head>`).replace('</body>',`<script>window.workspaceSetupNonce=${JSON.stringify(nonce)};window.workspaceSetupBootstrap=${JSON.stringify(bootstrap).replace(/</g,'\\u003c')};</script><script>${script}</script><script>${guideJS}</script></body>`);
+    const html=rendered.html.replace("connect-src 'none'","connect-src 'self'").replace('</head>',`<style>${css}\n${guideCSS}</style></head>`).replace('</body>',`<script>window.workspaceSetupNonce=${JSON.stringify(nonce)};window.workspaceSetupBootstrap=${JSON.stringify(bootstrap).replace(/</g,'\\u003c')};</script><script>${script}</script><script>${guideJS}</script><script>${updatesJS}</script></body>`);
     return new Response(html,{headers:{...headers,'Content-Type':'text/html; charset=utf-8'}});
    }
    if(request.method!=='POST')return json({error:'NOT_FOUND'},404);
    const supplied=request.headers.get('x-workspace-setup')||'';
    if(request.headers.get('origin')!==expected||request.headers.get('content-type')!=='application/json'||supplied.length!==nonce.length||!timingSafeEqual(Buffer.from(supplied),Buffer.from(nonce)))return json({error:'REQUEST_REJECTED'},403);
+   if(url.pathname==='/updates')return json(await updateView(await request.json()));
    if(url.pathname.startsWith('/context/')){
     const payload=await request.json(),action=url.pathname.slice(9);
     if(action==='view'){const v=await contextView(configFile);try{await verifyContextAccount(configFile,contextRun);return json({...v,connectionJob});}catch{return json({revision:v.revision,binding:null,draft:null,projects:[],coverage:{},collectedAt:null,synthesizedAt:null,completed:false,pending:null,scopeChanged:true,connectionJob});}}
@@ -75,6 +111,7 @@ export async function startSetup(configFile,{port=0,inventoryLoader=discover,col
    }finally{busy=false;}
   }catch(e){const code=/^[A-Z_]+$/.test(e.message)?e.message:'INVALID_INPUT';return json({error:code},code==='CONFIG_CHANGED'||code==='SETUP_BUSY'?409:422);}
  }});
- let ticking=false;const timer=setInterval(async()=>{if(ticking||busy)return;ticking=true;try{await contextTick(configFile,{run:contextRun});}catch{}finally{ticking=false;}},60000);timer.unref?.();
- return {port:server.port,stop(close){clearInterval(timer);return server.stop(close);}};
+ // Once the browser starts event observation, its reconciler owns the cadence.
+ let ticking=false;const timer=setInterval(async()=>{if(updates||ticking||busy)return;ticking=true;try{await contextTick(configFile,{run:contextRun});}catch{}finally{ticking=false;}},60000);timer.unref?.();
+ return {port:server.port,stop(close){stopped=true;clearInterval(timer);stopUpdates();return server.stop(close);}};
 }

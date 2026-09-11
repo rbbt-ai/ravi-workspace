@@ -1,6 +1,7 @@
 (() => {
   'use strict';
-  const data = JSON.parse(document.getElementById('workspace-data').textContent);
+  let data = JSON.parse(document.getElementById('workspace-data').textContent);
+  let accessHidden=false;
   const config=JSON.parse(document.getElementById('workspace-config').textContent);
   const main = document.getElementById('main');
   const dialog = document.getElementById('detail-dialog');
@@ -112,6 +113,7 @@
     render(false,options.focusKey);
   }
   function render(restore=false,focusKey) {
+    if(accessHidden){main.innerHTML='<p class="inline-notice">Verifique sua conta em Configurar fontes para continuar.</p>';return;}
     const route=routeFromLocation();
     const {path,params}=parseRoute(route);
     let body;
@@ -241,5 +243,21 @@
   window.addEventListener('popstate',syncHistory);
   window.addEventListener('hashchange',syncHistory);
   if(!history.state?.atlas)history.replaceState({atlas:true,key:`atlas-${Date.now()}-${++sequence}`,canGoBack:false},'',`#${routeFromLocation()}`);
+  window.workspaceReplaceData = next => {
+    if(!next||document.querySelector('dialog[open]'))return false;
+    remember();accessHidden=false;data=next;
+    homeData=data.home;projectContext=data.projectContext;connectorsData=data.connectors;
+    agendaData=homeData.feeds.agenda;agendaItems=agendaData.items||[];meetingData=homeData.feeds.meetings;meetingItems=meetingData.items||[];
+    pipelineData=homeData.feeds.pipeline;pipelineItems=pipelineData.items||[];
+    pendingTasks=homeData.tasks.filter(t=>['high','urgent'].includes(t.priority));alertsData=data.alerts;activityData=data.activity||null;connectionSources=data.connectionSources||null;
+    feedLiveStates=Object.fromEntries(Object.entries(data.sourceStates).map(([key,s])=>[key,{verified:s.status==='ready',error:['unavailable','stale'].includes(s.status)?'SOURCE_UNAVAILABLE':null,stale:s.status==='stale',data:{...data.home.feeds[key],capturedAt:s.capturedAt}}]));
+    managerState={...managerState,capturedAt:data.connectionSources?.capturedAt||null,connections:data.connectionSources?.connections||[]};
+    document.getElementById('workspace-data').textContent=JSON.stringify(next);render(true);return true;
+  };
+  window.workspaceHideData = () => {
+    accessHidden=true;data={};document.getElementById('workspace-data').textContent='{}';
+    document.querySelectorAll('dialog[open]').forEach(d=>d.close());
+    main.innerHTML='<p class="inline-notice">Verifique sua conta em Configurar fontes para continuar.</p>';
+  };
   render();
 })();

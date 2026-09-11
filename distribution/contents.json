@@ -10,6 +10,7 @@
     "docs/CONFIGURATION.md",
     "docs/CONTEXT-ENGINE.md",
     "docs/DISTRIBUTION.md",
+    "docs/EVENT-UPDATES.md",
     "docs/INSTALLATION.md",
     "docs/ONBOARDING.md",
     "docs/OPERATIONS.md",
@@ -31,11 +32,13 @@
     "src/apps/workspace-hub/lib/presentation.mjs",
     "src/apps/workspace-hub/lib/providers.mjs",
     "src/apps/workspace-hub/lib/read-cli-tty.py",
+    "src/apps/workspace-hub/lib/sdk-events.mjs",
     "src/apps/workspace-hub/lib/sdk-operations.mjs",
     "src/apps/workspace-hub/lib/sdk.mjs",
     "src/apps/workspace-hub/lib/setup-server.mjs",
     "src/apps/workspace-hub/lib/setup.mjs",
     "src/apps/workspace-hub/lib/snapshot.mjs",
+    "src/apps/workspace-hub/lib/updates.mjs",
     "src/apps/workspace-hub/ravi.app.json",
     "src/apps/workspace-hub/ui/index.html",
     "src/apps/workspace-hub/ui/workspace/activity-ui.js",
@@ -66,6 +69,7 @@
     "src/apps/workspace-hub/ui/workspace/template.html",
     "src/apps/workspace-hub/ui/workspace/theme.js",
     "src/apps/workspace-hub/ui/workspace/themes.css",
+    "src/apps/workspace-hub/ui/workspace/updates.js",
     "src/apps/workspace-hub/ui/workspace/vendor/ANIME-LICENSE.md",
     "src/apps/workspace-hub/ui/workspace/vendor/motion.js",
     "src/apps/workspace-hub/ui/workspace/views.js",
@@ -73,6 +77,8 @@
     "src/apps/workspace-hub/vendor/ravi-sdk/client.js",
     "src/apps/workspace-hub/vendor/ravi-sdk/errors.js",
     "src/apps/workspace-hub/vendor/ravi-sdk/inherit.js",
+    "src/apps/workspace-hub/vendor/ravi-sdk/streaming.generated.js",
+    "src/apps/workspace-hub/vendor/ravi-sdk/streaming.js",
     "src/apps/workspace-hub/vendor/ravi-sdk/transport/http.js",
     "src/apps/workspace-hub/vendor/ravi-sdk/version.js",
     "tests/configuration.test.mjs",
@@ -82,6 +88,7 @@
     "tests/sdk-context.test.mjs",
     "tests/sdk.test.mjs",
     "tests/setup.test.mjs",
-    "tests/test_distribution.py"
+    "tests/test_distribution.py",
+    "tests/updates.test.mjs"
   ]
 }

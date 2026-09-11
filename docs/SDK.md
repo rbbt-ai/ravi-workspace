@@ -64,3 +64,9 @@ Run `bun test tests/sdk.test.mjs tests/sdk-context.test.mjs tests/context.test.m
 for contract, pagination, scope, failure/cache and review-integrity checks.
 Synthetic account/mailbox data exists only in isolated tests. This candidate does
 not certify real Gmail OAuth/mailbox access or two different people's installations.
+
+## Event invalidation
+
+The next candidate adds backend SSE observation, source-level invalidation and
+reconciliation, plus in-place local UI updates. See [EVENT-UPDATES.md](EVENT-UPDATES.md)
+for coverage, permissions, failure handling and the live subscription limitation.

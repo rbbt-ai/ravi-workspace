@@ -1,4 +1,4 @@
-  const connectorsData=data.connectors;
+  let connectorsData=data.connectors;
   const connectorItems=connectorsData.items;
   let connectionSources=data.connectionSources||null;
   const connectorDestinations={agenda:{name:'Agenda do dia',route:'/agenda',icon:'calendar'},meetings:{name:'Reuniões transcritas',route:'/meetings',icon:'meeting'}};

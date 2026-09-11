@@ -111,8 +111,8 @@ export async function conversationEvidence(id,days,run=command){
  });
 }
 
-export async function contextInventory(days,run=command){
+export async function contextInventory(days,run=command,kinds){
  const started=Date.now();
  const bounded=async(args,options)=>{if(Date.now()-started>45000)throw Error('CATALOG_TIME_LIMIT');return run(args,options);};
- return discover(days,bounded);
+ return discover(days,bounded,{...(kinds?{kinds}:{})});
 }

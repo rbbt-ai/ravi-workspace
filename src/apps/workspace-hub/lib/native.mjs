@@ -83,9 +83,9 @@ export async function sessionRows(run=command){
  }
  throw Error('INVENTORY_LIMIT');
 }
-export async function discover(days=15,run=command){
+export async function discover(days=15,run=command,{kinds=['agents','sessions','projects','tasks']}={}){
  const result={schema:'workspace.inventory/v1',capturedAt:new Date().toISOString(),historyDays:days,coverage:{},agents:[],sessions:[],projects:[],tasks:[]};
- await Promise.all(['agents','sessions','projects','tasks'].map(async kind=>{
+ await Promise.all(['agents','sessions','projects','tasks'].filter(kind=>kinds.includes(kind)).map(async kind=>{
   try{
    const rows=kind==='sessions'?await sessionRows(run):await nativeRows(kind,days,run);
    result[kind]=kind==='sessions'?rows:rows.map(r=>kind==='agents'?{id:r.id,name:text(r.name||r.id,120),role:'Agente Ravi',source:'Ravi · cadastro de agentes'}:kind==='projects'?{id:r.id,title:text(r.title,180),status:text(r.status,40),summary:text(r.summary),next:text(r.nextStep),owner:identifier(r.ownerAgentId)?r.ownerAgentId:'',updatedAt:r.updatedAt??null}:{id:r.id,title:text(r.title,180),status:text(r.status,40),priority:text(r.priority,40),updatedAt:r.updatedAt??null,deadline:null});

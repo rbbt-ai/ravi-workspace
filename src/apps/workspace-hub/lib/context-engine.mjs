@@ -48,17 +48,18 @@ export async function bindContext(file,payload,inventory,{run=command}={}){retur
  if(s.binding&&hash(s.binding)!==hash(b)){await atomic(fileOf(file)+'.previous',s);Object.assign(s,empty(await readConfig(file)));}
  s.binding=b;s.draft=null;await atomic(fileOf(file),s);return view(s);
 });}
-export async function collectContext(file,{run=command}={}){return locked(file,async()=>{
- const s=await contextState(file,{run}),b=s.binding;if(!b)throw Error('CONTEXT_NOT_CONFIGURED');await sameAccount(b,run);
+export async function collectContext(file,{run=command,kinds,verify=async()=>{}}={}){return locked(file,async()=>{
+ await verify();const s=await contextState(file,{run}),b=s.binding;if(!b)throw Error('CONTEXT_NOT_CONFIGURED');await sameAccount(b,run);
  if(s.pending)return {...view(s),status:Date.parse(s.pending.expiresAt)<Date.now()?'analysis_expired':'already_pending'};
- const evidence=[],coverage={},at=now();
+ const evidence=[],coverage=kinds?structuredClone(s.coverage):{},at=now(),wanted=k=>!kinds||kinds.includes(k);
  const attempt=async(k,fn)=>{try{const found=await fn();evidence.push(...found);coverage[k]={status:'ready',count:found.length};}catch(e){coverage[k]={status:'unavailable',error:code(e)};}};
- if(b.containers.length)await attempt('pages',async()=>(await orgPages(b,run)).map(p=>({...p,text:p.summary,sourceAt:p.updatedAt,level:'metadata',limitation:'Catálogo de Page. Conteúdo não confirmado por esta fonte.'})));
- for(const id of b.artifacts)await attempt('artifact:'+id,async()=>[await artifactEvidence(id,run)]);
- const native=await contextInventory(b.days,run);
- for(const kind of ['projects','tasks'])if(b[kind].length)await attempt(kind,async()=>{if(native.coverage[kind].status!=='ready')throw Error('SOURCE_UNAVAILABLE');return native[kind].filter(p=>b[kind].includes(p.id)).map(p=>({id:kind+':'+p.id,kind,title:p.title,text:clean([p.summary,p.next,p.status].filter(Boolean).join(' · ')),sourceAt:date(p.updatedAt),level:'registry',limitation:'Cadastro nativo; estado não comprova execução atual.'}));});
- for(const id of b.sessions)await attempt('session:'+id,()=>conversationEvidence(id,b.days,run));
- if(b.gmail.connectorId)await attempt('gmail',async()=>{const r=await gmailEvidence(b.gmail,b.days,run);coverage.gmailWindow={status:r.complete?'ready':'partial',limit:80};return r.items;});
+ if(b.containers.length&&wanted('pages'))await attempt('pages',async()=>(await orgPages(b,run)).map(p=>({...p,text:p.summary,sourceAt:p.updatedAt,level:'metadata',limitation:'Catálogo de Page. Conteúdo não confirmado por esta fonte.'})));
+ for(const id of b.artifacts.filter(id=>wanted('artifact:'+id)))await attempt('artifact:'+id,async()=>[await artifactEvidence(id,run)]);
+ const nativeKinds=['projects','tasks'].filter(k=>b[k].length&&wanted(k));
+ const native=nativeKinds.length?await contextInventory(b.days,run,nativeKinds):{coverage:{}};
+ for(const kind of ['projects','tasks'])if(b[kind].length&&wanted(kind))await attempt(kind,async()=>{if(native.coverage[kind].status!=='ready')throw Error('SOURCE_UNAVAILABLE');return native[kind].filter(p=>b[kind].includes(p.id)).map(p=>({id:kind+':'+p.id,kind,title:p.title,text:clean([p.summary,p.next,p.status].filter(Boolean).join(' · ')),sourceAt:date(p.updatedAt),level:'registry',limitation:'Cadastro nativo; estado não comprova execução atual.'}));});
+ for(const id of b.sessions.filter(id=>wanted('session:'+id)))await attempt('session:'+id,()=>conversationEvidence(id,b.days,run));
+ if(b.gmail.connectorId&&wanted('gmail'))await attempt('gmail',async()=>{const r=await gmailEvidence(b.gmail,b.days,run);coverage.gmailWindow={status:r.complete?'ready':'partial',limit:80};return r.items;});
  await sameAccount(b,run);
  const unique=[...new Map(evidence.map(e=>[e.id,{...e,fingerprint:hash([e.text,e.sourceAt,e.version,e.title]),collectedAt:at}])).values()];
  const changed=unique.filter(e=>!s.sources.some(old=>old.id===e.id&&old.fingerprint===e.fingerprint));
@@ -69,7 +70,7 @@ export async function collectContext(file,{run=command}={}){return locked(file,a
   const batch=changed.sort((a,b)=>(rank[a.level]??3)-(rank[b.level]??3)||(Date.parse(b.sourceAt)||0)-(Date.parse(a.sourceAt)||0)||a.id.localeCompare(b.id)).slice(0,32);s.pending={id:randomUUID(),baseHash:hash([s.binding,s.projects,s.rules,s.sources]),createdAt:at,expiresAt:new Date(Date.now()+3600000).toISOString(),status:'ready',evidence:batch};
   s.coverage.analysis={status:changed.length>batch.length?'partial':'ready',pending:batch.length,remaining:changed.length-batch.length};
  }
- await atomic(fileOf(file),s);return {...view(s),status:changed.length?'review_required':Object.values(coverage).some(c=>c.status==='unavailable')?'source_error':'unchanged'};
+ await verify();await atomic(fileOf(file),s);return {...view(s),status:changed.length?'review_required':Object.values(coverage).some(c=>c.status==='unavailable')?'source_error':'unchanged'};
 });}
 export async function packet(file){const s=await contextState(file);if(!s.pending)return {status:'no_pending'};if(Date.parse(s.pending.expiresAt)<Date.now())throw Error('ANALYSIS_EXPIRED');return {schema:'workspace.context-review/v1',installationId:s.installationId,organizationId:s.binding.organizationId,focus:s.binding.focus,projects:s.projects,rules:s.rules,...s.pending};}
 export function validateProjects(projects,sourceIds){
@@ -131,14 +132,15 @@ export async function requestAnalysis(file,{run=command}={}){return locked(file,
 });}
 export async function contextMap(file,{run=command}={}){const s=await contextState(file,{run});if(!s.binding)return null;return {schema:'workspace.project-map/v1',organizationId:s.binding.organizationId,projects:s.projects,sources:publicSources(s),collectedAt:s.collectedAt,synthesizedAt:s.synthesizedAt,coverage:s.coverage,pending:!!s.pending};}
 
-export async function contextTick(file,{run=command}={}){
+export async function contextTick(file,{run=command,kinds,force=false,verify=async()=>{}}={}){
  const s=await contextState(file,{run});if(!s.binding||!s.completed||!s.binding.autoUpdate)return {status:'not_configured'};
  if(s.pending)return {status:'already_pending'};
- if(s.collectedAt&&Date.now()-Date.parse(s.collectedAt)<900000)return {status:'not_due'};
- try{const result=await collectContext(file,{run});
+ if(!force&&s.collectedAt&&Date.now()-Date.parse(s.collectedAt)<900000)return {status:'not_due'};
+ try{const result=await collectContext(file,{run,kinds,verify});await verify();
   if(result.pending?.status==='ready')return requestAnalysis(file,{run});
   return result;
  }catch(e){
+  if(['CONFIG_CHANGED','ORGANIZATION_CHANGED','ACCESS_DENIED','AUTH_EXPIRED'].includes(e.message))return {status:'source_error',error:code(e)};
   await locked(file,async()=>{const current=await contextState(file,{run});current.coverage.analysis={status:'unavailable',error:code(e)};await atomic(fileOf(file),current);});
   return {status:'source_error',error:code(e)};
  }

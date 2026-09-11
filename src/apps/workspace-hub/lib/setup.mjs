@@ -47,20 +47,21 @@ export async function saveSetup(file,input,inventory){return locked(file,async()
  projectSnapshot(snapshot,next);
  await atomic(file,next);return {status:'saved',revision:digest(next),sourcesVerified:false};
 });}
-export async function collect(file,{inventoryLoader=discover,calendarLoader=calendar,meetingsLoader=meetings}={}){return locked(file,async()=>{
+export async function collect(file,{inventoryLoader=discover,calendarLoader=calendar,meetingsLoader=meetings,sources,verify=async()=>{}}={}){return locked(file,async()=>{
  const config=await readConfig(file),previous=await readSnapshot(file),now=new Date().toISOString();
+ await verify();const selected=config.sources.filter(n=>!sources||sources.includes(n));
  const data=projectSnapshot(previous,config);
- const inventory=config.sources.some(n=>['projects','tasks','agents'].includes(n))?await inventoryLoader(config.historyDays):{capturedAt:now,historyDays:config.historyDays,agents:[],sessions:[],projects:[],tasks:[],coverage:{}};
+ const inventory=selected.some(n=>['projects','tasks','agents'].includes(n))?await inventoryLoader(config.historyDays,undefined,{kinds:[...selected.filter(n=>['projects','tasks','agents'].includes(n)),...(selected.includes('agents')?['sessions']:[])]}):{capturedAt:now,historyDays:config.historyDays,agents:[],sessions:[],projects:[],tasks:[],coverage:{}};
  const state=structuredClone(data.sourceStates),results={};
  const available=(name,fn)=>{try{fn();state[name]={status:'ready',capturedAt:now};results[name]={status:'ready'};}catch(e){state[name]={status:state[name]?.capturedAt?'stale':'unavailable',capturedAt:state[name]?.capturedAt??null,error:errorCode(e)};results[name]={status:state[name].status,error:errorCode(e)};}};
- for(const name of ['projects','tasks','agents'])if(config.sources.includes(name))available(name,()=>{
+ for(const name of ['projects','tasks','agents'])if(selected.includes(name))available(name,()=>{
   if(inventory.coverage[name].status!=='ready'&&!(name==='agents'&&inventory.coverage.sessions.status==='ready'))throw Error('SOURCE_UNAVAILABLE');
   if(name==='agents'){
    if(inventory.coverage.sessions.status!=='ready'&&config.selection.sessions.length)throw Error('SESSION_INVENTORY_UNAVAILABLE');
    data.agents=inventory.agents;data.sessions=inventory.sessions;data.inventory={capturedAt:inventory.capturedAt,capturedLabel:'Metadados consultados em '+inventory.capturedAt,selectionDays:config.historyDays,coverage:'visible-inventory',refresh:'manual'};
   }else data.home[name]=inventory[name];
  });
- for(const [name,mode,loader] of [['agenda','google-workspace',calendarLoader],['meetings','tldv',meetingsLoader]])if(config.sources.includes(name)){
+ for(const [name,mode,loader] of [['agenda','google-workspace',calendarLoader],['meetings','tldv',meetingsLoader]])if(selected.includes(name)){
   try{if(config.integrations[name].mode!==mode)throw Error('SOURCE_NOT_CONFIGURED');const feed=await loader(config);
    // Provider reads return only display fields. Validate before replacing valid data.
    const candidate=structuredClone(data);candidate.home.feeds[name]=feed;
@@ -68,12 +69,12 @@ export async function collect(file,{inventoryLoader=discover,calendarLoader=cale
    data.home.feeds[name]=feed;state[name]={status:'ready',capturedAt:feed.capturedAt};results[name]={status:'ready',count:feed.items.length};
   }catch(e){state[name]={status:state[name]?.capturedAt?'stale':'unavailable',capturedAt:state[name]?.capturedAt??null,error:errorCode(e)};results[name]={status:state[name].status,error:errorCode(e)};}
  }
- for(const name of config.sources.filter(n=>!['agents','projects','tasks','agenda','meetings','connections'].includes(n))){
+ for(const name of selected.filter(n=>!['agents','projects','tasks','agenda','meetings','connections'].includes(n))){
   // Imported evidence keeps its actual collection/synthesis dates. A refresh is
   // never reported as a new collection of these optional sources.
   state[name]={...state[name],status:state[name].capturedAt?'stale':'unavailable',error:'NO_AUTOMATIC_ADAPTER'};results[name]={status:state[name].status,error:'NO_AUTOMATIC_ADAPTER'};
  }
- if(config.sources.includes('connections')){
+ if(selected.includes('connections')){
   data.connectors.items=['agenda','meetings'].filter(n=>config.sources.includes(n)).map(n=>({id:n,name:n==='agenda'?'Google Calendar':'tl;dv',feed:n,account:n==='agenda'?config.integrations.agenda.account:'Titular não verificado pela API',accountVerified:n==='agenda'&&state[n].status==='ready',method:'Integração existente no Ravi',purpose:n==='agenda'?'Agenda do dia':'Reuniões transcritas',observedAccess:state[n].status==='ready'?['Leitura confirmada nesta coleta']:[],permissionNote:'Seleção local não concede acesso. A autorização é verificada na consulta.',manageUrl:n==='agenda'?'https://myaccount.google.com/connections':'https://tldv.io/app/settings',helpUrl:'',instructions:'Gerencie consentimento ou chave no provedor. Nenhuma conta é alterada pelo Workspace.'}));
   // Controls are links only; the account value is never a secret.
   data.connectors.items.forEach(c=>{if(!config.allowedOrigins.includes(new URL(c.manageUrl).origin))c.manageUrl='';});
@@ -82,7 +83,7 @@ export async function collect(file,{inventoryLoader=discover,calendarLoader=cale
  const candidate={schema:'workspace.snapshot/v1',installationId:config.installationId,capturedAt:now,presentation:strip(data),sourceStates:state};
  const sanitized=projectSnapshot(candidate,config);candidate.presentation=strip(sanitized);
  for(const name of ['agents','projects','tasks'])if(results[name]?.status==='ready')results[name].count=name==='agents'?sanitized.agents.length:sanitized.home[name].length;
- await atomic(snapshotPath(file),candidate);
+ await verify();await atomic(snapshotPath(file),candidate);
  return {status:Object.values(results).some(r=>r.status==='ready')?'collected':'unavailable',capturedAt:now,results,inventory};
 });}
 function strip(data){const {sourceStates,...presentation}=data;return presentation;}

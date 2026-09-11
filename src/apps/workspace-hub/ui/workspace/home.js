@@ -1,4 +1,4 @@
-  const homeData = data.home;
+  let homeData = data.home;
   const widgetDefinitions = [
     {id:'agenda',name:'Agenda do dia',icon:'calendar',size:'compact',description:'Compromissos e espaço para organizar o dia.'},
     {id:'urgent',name:'Pendências urgentes',icon:'alert',size:'compact',description:'Prioridades abertas e bloqueios que pedem atenção.'},
